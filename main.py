@@ -19,7 +19,7 @@ from utils import (Counter, Trainer, Tester, Evaluator,
 
 
 def parse_args():
-    default_base_dir = '/Users/tchu/Documents/rl_test/deeprl_dist/ia2c_grid_0.9'
+    default_base_dir = "C:\Users\xy7518\OneDrive - Imperial College London\ATSC\Test"
     default_config_dir = './config/config_ia2c_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,

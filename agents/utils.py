@@ -11,7 +11,7 @@ def ortho_init(scale=DEFAULT_SCALE, mode=None):
     def _ortho_init(shape, dtype, partition_info=None):
         # lasagne ortho init for tf
         shape = tuple(shape)
-        if len(shape) == 2: # fc: in, out
+        if len(shape) == 2: # fc: in, out (fully connected)
             flat_shape = shape
         elif (len(shape) == 3) or (len(shape) == 4): # 1d/2dcnn: (in_h), in_w, in_c, out
             flat_shape = (np.prod(shape[:-1]), shape[-1])
