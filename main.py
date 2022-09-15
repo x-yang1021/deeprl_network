@@ -19,8 +19,8 @@ from utils import (Counter, Trainer, Tester, Evaluator,
 
 
 def parse_args():
-    default_base_dir = "C:\Users\xy7518\OneDrive - Imperial College London\ATSC\Test"
-    default_config_dir = './config/config_ia2c_grid.ini'
+    default_base_dir = 'H:\\GitHub\\deeprl_network\\test'
+    default_config_dir = 'H:\\GitHub\\deeprl_network\\config\\config_ia2c_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,
                         default=default_base_dir, help="experiment base dir")
@@ -80,6 +80,7 @@ def train(args):
     dirs = init_dir(base_dir)
     init_log(dirs['log'])
     config_dir = args.config_dir
+    print(config_dir, dirs['data'])
     copy_file(config_dir, dirs['data'])
     config = configparser.ConfigParser()
     config.read(config_dir)
@@ -110,12 +111,12 @@ def train(args):
 
 
 def evaluate_fn(agent_dir, output_dir, seeds, port, demo):
-    agent = agent_dir.split('/')[-1]
+    agent = agent_dir.split('\\')[-1]
     if not check_dir(agent_dir):
         logging.error('Evaluation: %s does not exist!' % agent)
         return
     # load config file 
-    config_dir = find_file(agent_dir + '/data/')
+    config_dir = find_file(agent_dir + '\\data\\')
     if not config_dir:
         return
     config = configparser.ConfigParser()
@@ -129,7 +130,7 @@ def evaluate_fn(agent_dir, output_dir, seeds, port, demo):
     model = init_agent(env, config['MODEL_CONFIG'], 0, 0)
     if model is None:
         return
-    model_dir = agent_dir + '/model/'
+    model_dir = agent_dir + '\\model\\'
     if not model.load(model_dir):
         return
     # collect evaluation data
