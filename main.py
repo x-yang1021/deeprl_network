@@ -17,10 +17,11 @@ from utils import (Counter, Trainer, Tester, Evaluator,
                    init_dir, init_log, init_test_flag,
                    plot_evaluation, plot_train)
 
+tf.compat.v1.disable_eager_execution()
 
 def parse_args():
-    default_base_dir = 'H:\\GitHub\\deeprl_network\\test'
-    default_config_dir = 'H:\\GitHub\\deeprl_network\\config\\config_ia2c_grid.ini'
+    default_base_dir = '/Users/yang/Documents/GitHub/deeprl_network/test'
+    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ia2c_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,
                         default=default_base_dir, help="experiment base dir")
@@ -111,12 +112,12 @@ def train(args):
 
 
 def evaluate_fn(agent_dir, output_dir, seeds, port, demo):
-    agent = agent_dir.split('\\')[-1]
+    agent = agent_dir.split('/')[-1]
     if not check_dir(agent_dir):
         logging.error('Evaluation: %s does not exist!' % agent)
         return
     # load config file 
-    config_dir = find_file(agent_dir + '\\data\\')
+    config_dir = find_file(agent_dir + '/data/')
     if not config_dir:
         return
     config = configparser.ConfigParser()

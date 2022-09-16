@@ -16,14 +16,14 @@ def check_dir(cur_dir):
 
 def copy_file(src_dir, tar_dir):
     # cmd = 'copy %s %s' % (src_dir, tar_dir)
-    cmd ='copy %s %s' % (src_dir, tar_dir)
+    cmd ='cp %s %s' % (src_dir, tar_dir)
     subprocess.check_call(cmd, shell=True)
 
 
 def find_file(cur_dir, suffix='.ini'):
     for file in os.listdir(cur_dir):
         if file.endswith(suffix):
-            return cur_dir + '\\' + file
+            return cur_dir + '/' + file
     logging.error('Cannot find %s file' % suffix)
     return None
 
@@ -33,7 +33,7 @@ def init_dir(base_dir, pathes=['log', 'data', 'model']):
         os.mkdir(base_dir)
     dirs = {}
     for path in pathes:
-        cur_dir = base_dir + '\\%s\\' % path
+        cur_dir = base_dir + '/%s/' % path
         if not os.path.exists(cur_dir):
             os.mkdir(cur_dir)
         dirs[path] = cur_dir
