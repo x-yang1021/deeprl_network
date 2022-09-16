@@ -101,7 +101,7 @@ def train(args):
     model = init_agent(env, config['MODEL_CONFIG'], total_step, seed)
 
     # disable multi-threading for safe SUMO implementation
-    summary_writer = tf.summary.FileWriter(dirs['log'])
+    summary_writer = tf.compat.v1.summary.FileWriter(dirs['log'])
     trainer = Trainer(env, model, global_counter, summary_writer, output_path=dirs['data'])
     trainer.run()
 

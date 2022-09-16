@@ -115,10 +115,10 @@ class Trainer():
         self._init_summary()
 
     def _init_summary(self):
-        self.train_reward = tf.placeholder(tf.float32, [])
-        self.train_summary = tf.summary.scalar('train_reward', self.train_reward)
-        self.test_reward = tf.placeholder(tf.float32, [])
-        self.test_summary = tf.summary.scalar('test_reward', self.test_reward)
+        self.train_reward = tf.compat.v1.placeholder(tf.float32, [])
+        self.train_summary = tf.compat.v1.summary.scalar('train_reward', self.train_reward)
+        self.test_reward = tf.compat.v1.placeholder(tf.float32, [])
+        self.test_summary = tf.compat.v1.summary.scalar('test_reward', self.test_reward)
 
     def _add_summary(self, reward, global_step, is_train=True):
         if is_train:
@@ -265,8 +265,8 @@ class Tester(Trainer):
         logging.info('Testing: total test num: %d' % self.test_num)
 
     def _init_summary(self):
-        self.reward = tf.placeholder(tf.float32, [])
-        self.summary = tf.summary.scalar('test_reward', self.reward)
+        self.reward = tf.compat.v1.placeholder(tf.float32, [])
+        self.summary = tf.compat.v1.summary.scalar('test_reward', self.reward)
 
     def run_offline(self):
         # enable traffic measurments for offline test

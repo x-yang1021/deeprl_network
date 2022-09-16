@@ -39,12 +39,12 @@ class Policy:
         self._train = self.optimizer.apply_gradients(list(zip(grads, wts)))
         # monitor training
         summaries = []
-        summaries.append(tf.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
-        summaries.append(tf.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
-        summaries.append(tf.summary.scalar('train/%s_lr' % self.name, self.lr))
-        summaries.append(tf.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_lr' % self.name, self.lr))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
         self.summary = tf.compat.v1.summary.merge(summaries)
 
     def _build_actor_head(self, h, n_a=None, agent_name=None):
@@ -264,12 +264,12 @@ class NCMultiAgentPolicy(Policy):
         self._train = self.optimizer.apply_gradients(list(zip(grads, wts)))
         # monitor training
         summaries = []
-        summaries.append(tf.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
-        summaries.append(tf.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
-        summaries.append(tf.summary.scalar('train/%s_lr' % self.name, self.lr))
-        summaries.append(tf.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_lr' % self.name, self.lr))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
         self.summary = tf.compat.v1.summary.merge(summaries)
 
     def _build_net(self, in_type):
