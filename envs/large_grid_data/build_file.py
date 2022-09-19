@@ -14,7 +14,7 @@ import sumolib
 
 MAX_CAR_NUM = 30
 SPEED_LIMIT_ST = 20
-SPEED_LIMIT_AV = 11
+SPEED_LIMIT_AV = 20
 L0 = 200
 L0_end = 75
 N = 5
@@ -49,12 +49,13 @@ def output_nodes(node):
         ind += 1
     str_nodes += '</nodes>\n'
     return str_nodes
+    print(str_nodes)
 
 
 def output_road_types():
     str_types = '<types>\n'
-    str_types += '  <type id="a" priority="2" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_ST
-    str_types += '  <type id="b" priority="1" numLanes="1" speed="%.2f"/>\n' % SPEED_LIMIT_AV
+    str_types += '  <type id="a" priority="1" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_ST
+    str_types += '  <type id="b" priority="1" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_AV
     str_types += '</types>\n'
     return str_types
 
@@ -112,11 +113,20 @@ def get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node):
     str_cons += get_con_str(con, n_node, cur_node, s_node, 0, 0)
     str_cons += get_con_str(con, w_node, cur_node, e_node, 0, 0)
     str_cons += get_con_str(con, e_node, cur_node, w_node, 0, 0)
+    # str_cons += get_con_str(con, s_node, cur_node, n_node, 1, 1)
+    # str_cons += get_con_str(con, n_node, cur_node, s_node, 1, 1)
+    # str_cons += get_con_str(con, w_node, cur_node, e_node, 1, 1)
+    # str_cons += get_con_str(con, e_node, cur_node, w_node, 1, 1)
+
     # left-turn
-    str_cons += get_con_str(con, s_node, cur_node, w_node, 0, 1)
-    str_cons += get_con_str(con, n_node, cur_node, e_node, 0, 1)
-    str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 0)
-    str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 0)
+    str_cons += get_con_str(con, s_node, cur_node, w_node, 1, 1)
+    str_cons += get_con_str(con, n_node, cur_node, e_node, 1, 1)
+    str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 1)
+    str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 1)
+    # str_cons += get_con_str(con, s_node, cur_node, w_node, 1, 0)
+    # str_cons += get_con_str(con, n_node, cur_node, e_node, 1, 0)
+    # str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 0)
+    # str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 0)
     # right-turn
     str_cons += get_con_str(con, s_node, cur_node, e_node, 0, 0)
     str_cons += get_con_str(con, n_node, cur_node, w_node, 0, 0)
@@ -178,7 +188,7 @@ def output_connections(con):
         e_node = 'nt' + str(i + 1)
         cur_node = 'nt' + str(i)
         str_cons += get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node)
-
+    print(str_cons)
     str_cons += '</connections>\n'
     return str_cons
 
@@ -209,6 +219,7 @@ def get_external_od(out_edges, dest=True):
         else:
             edge = '%s_%s' % (out_node, in_node)
         cur_dest.append(edge)
+
     return cur_dest
 
 
@@ -369,9 +380,9 @@ def output_ild(ild):
         node1 = 'nt' + str(i)
         node2 = 'np' + str(j)
         str_adds += get_ild_str(node2, node1, ild)
-        if k < 10:
+        #if k < 10:
             # streets
-            str_adds += get_ild_str(node2, node1, ild, lane_i=1)
+        #str_adds += get_ild_str(node2, node1, ild, lane_i=1)
     # streets
     for i in range(1, 25, 5):
         for j in range(4):
@@ -388,6 +399,8 @@ def output_ild(ild):
             node2 = 'nt' + str(i + j + 5)
             str_adds += get_ild_str(node1, node2, ild)
             str_adds += get_ild_str(node2, node1, ild)
+            str_adds += get_ild_str(node1, node2, ild, lane_i=1)
+            str_adds += get_ild_str(node2, node1, ild, lane_i=1)
     str_adds += '</additional>\n'
     return str_adds
 

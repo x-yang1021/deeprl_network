@@ -278,7 +278,7 @@ class TrafficSimulator:
         # for local and neighbor coop level
         self.n_agent = self.n_node
         # to simplify the sim, we assume all agents have the max action dim,
-        # with tailing zeros during run time
+        # with trailing zeros during run time
         self.n_a_ls = []
         for node_name in self.node_names:
             node = self.nodes[node_name]

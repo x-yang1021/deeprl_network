@@ -131,7 +131,7 @@ def evaluate_fn(agent_dir, output_dir, seeds, port, demo):
     model = init_agent(env, config['MODEL_CONFIG'], 0, 0)
     if model is None:
         return
-    model_dir = agent_dir + '\\model\\'
+    model_dir = agent_dir + '/model/'
     if not model.load(model_dir):
         return
     # collect evaluation data
