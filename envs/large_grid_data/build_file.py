@@ -456,9 +456,9 @@ def main():
     # os.system('jtrrouter -n exp.net.xml -r exp.raw.rou.xml -o exp.rou.xml')
 
     # add.xml file
-    ild = '  <laneAreaDetector file="ild.out" freq="1" id="%s_%d" lane="%s_%d" pos="-50" endPos="-1"/>\n'
-    # ild_in = '  <inductionLoop file="ild_out.out" freq="15" id="ild_in:%s" lane="%s_0" pos="10"/>\n'
-    write_file('./exp.add.xml', output_ild(ild))
+    # ild = '  <laneAreaDetector file="ild.out" freq="1" id="%s_%d" lane="%s_%d" pos="-50" endPos="-1"/>\n'
+    # # ild_in = '  <inductionLoop file="ild_out.out" freq="15" id="ild_in:%s" lane="%s_0" pos="10"/>\n'
+    # write_file('./exp.add.xml', output_ild(ild))
 
     # config file
     write_file('./exp.sumocfg', output_config())

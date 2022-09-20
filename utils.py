@@ -99,7 +99,7 @@ class Counter:
 
 
 class Trainer():
-    def __init__(self, env, model, global_counter, summary_writer, output_path=None):
+    def __init__(self, env, model, global_counter, summary_writer, output_path=None, gui=False):
         self.cur_step = 0
         self.global_counter = global_counter
         self.env = env
@@ -113,6 +113,7 @@ class Trainer():
         self.output_path = output_path
         self.env.train_mode = True
         self._init_summary()
+        self.gui = gui
 
     def _init_summary(self):
         self.train_reward = tf.compat.v1.placeholder(tf.float32, [])
@@ -197,7 +198,7 @@ class Trainer():
             R = self._get_value(ob, done, action)
         return ob, done, R
 
-    def perform(self, test_ind, gui=False):
+    def perform(self, test_ind, gui=True):
         ob = self.env.reset(gui=gui, test_ind=test_ind)
         rewards = []
         # note this done is pre-decision to reset LSTM states!
@@ -226,7 +227,7 @@ class Trainer():
     def run(self):
         while not self.global_counter.should_stop():
             # np.random.seed(self.env.seed)
-            ob = self.env.reset()
+            ob = self.env.reset(gui=True)
             # note this done is pre-decision to reset LSTM states!
             done = True
             self.model.reset()

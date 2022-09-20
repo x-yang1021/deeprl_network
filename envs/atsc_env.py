@@ -391,7 +391,7 @@ class TrafficSimulator:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
                         cur_queue = min(cur_queue, QUEUE_MAX)
                     else:
-                        cur_queue = self.sim.lanearea.getLastStepHaltingNumber(ild)
+                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     max_pos = 0
@@ -399,7 +399,7 @@ class TrafficSimulator:
                     if self.name == 'atsc_real_net':
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                     else:
-                        cur_cars = self.sim.lanearea.getLastStepVehicleIDs(ild)
+                        cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                     for vid in cur_cars:
                         car_pos = self.sim.vehicle.getLanePosition(vid)
                         if car_pos > max_pos:
@@ -431,7 +431,7 @@ class TrafficSimulator:
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
                         else:
-                            cur_wave = self.sim.lanearea.getLastStepVehicleNumber(ild)
+                            cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
@@ -442,7 +442,7 @@ class TrafficSimulator:
                         if self.name == 'atsc_real_net':
                             cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                         else:
-                            cur_cars = self.sim.lanearea.getLastStepVehicleIDs(ild)
+                            cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                         for vid in cur_cars:
                             car_pos = self.sim.vehicle.getLanePosition(vid)
                             if car_pos > max_pos:
