@@ -161,5 +161,5 @@ if __name__ == '__main__':
         time.sleep(2)
         env.collect_tripinfo()
     env.plot_stat(np.array(rewards))
-    logging.info('avg reward: %.2f' % np.mean(rewards))
+    logging.info('avg reward: %.2f' % np.sum(rewards))
     env.output_data()
