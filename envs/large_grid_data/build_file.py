@@ -16,6 +16,7 @@ MAX_CAR_NUM = 30
 SPEED_LIMIT_ST = 20
 SPEED_LIMIT_AV = 20
 L0 = 200
+L1 = 150
 L0_end = 75
 N = 5
 
@@ -29,7 +30,7 @@ def output_nodes(node):
     str_nodes = '<nodes>\n'
     # traffic light nodes
     ind = 1
-    for dy in np.arange(0, L0 * 5, L0):
+    for dy in np.arange(0, L1 * 5, L1):
         for dx in np.arange(0, L0 * 5, L0):
             str_nodes += node % ('nt' + str(ind), dx, dy, 'traffic_light')
             ind += 1
@@ -38,13 +39,13 @@ def output_nodes(node):
     for dx in np.arange(0, L0 * 5, L0):
         str_nodes += node % ('np' + str(ind), dx, -L0_end, 'priority')
         ind += 1
-    for dy in np.arange(0, L0 * 5, L0):
+    for dy in np.arange(0, L1 * 5, L1):
         str_nodes += node % ('np' + str(ind), L0 * 4 + L0_end, dy, 'priority')
         ind += 1
     for dx in np.arange(L0 * 4, -1, -L0):
-        str_nodes += node % ('np' + str(ind), dx, L0 * 4 + L0_end, 'priority')
+        str_nodes += node % ('np' + str(ind), dx, L1 * 4 + L0_end, 'priority')
         ind += 1
-    for dy in np.arange(L0 * 4, -1, -L0):
+    for dy in np.arange(L1 * 4, -1, -L1):
         str_nodes += node % ('np' + str(ind), -L0_end, dy, 'priority')
         ind += 1
     str_nodes += '</nodes>\n'
