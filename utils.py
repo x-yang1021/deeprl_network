@@ -220,7 +220,7 @@ class Trainer():
             if done:
                 break
             ob = next_ob
-        mean_reward = np.mean(np.array(rewards))
+        mean_reward = np.sum(np.array(rewards))
         std_reward = np.std(np.array(rewards))
         return mean_reward, std_reward
 
@@ -243,7 +243,7 @@ class Trainer():
                     self.env.terminate()
                     break
             rewards = np.array(self.episode_rewards)
-            mean_reward = np.mean(rewards)
+            mean_reward = np.sum(rewards)
             std_reward = np.std(rewards)
             # NOTE: for CACC we have to run another testing episode after each
             # training episode since the reward and policy settings are different!
@@ -281,7 +281,7 @@ class Tester(Trainer):
             self.env.terminate()
             time.sleep(2)
             self.env.collect_tripinfo()
-        avg_reward = np.mean(np.array(rewards))
+        avg_reward = np.sum(np.array(rewards))
         logging.info('Offline testing: avg R: %.2f' % avg_reward)
         self.env.output_data()
 
@@ -301,7 +301,7 @@ class Tester(Trainer):
                            'test_id': test_ind,
                            'reward': cur_reward}
                     self.data.append(log)
-                avg_reward = np.mean(np.array(rewards))
+                avg_reward = np.sum(np.array(rewards))
                 self._add_summary(avg_reward, global_step)
                 logging.info('Testing: global step %d, avg R: %.2f' %
                              (global_step, avg_reward))

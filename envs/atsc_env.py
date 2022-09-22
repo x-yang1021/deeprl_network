@@ -10,11 +10,35 @@ from sumolib import checkBinary
 import time
 import traci
 import xml.etree.cElementTree as ET
+import networkx as nx
 
 DEFAULT_PORT = 8000
 SEC_IN_MS = 1000
 VEH_LEN_M = 7.5 # effective vehicle length
 QUEUE_MAX = 10
+
+import networkx as nx
+
+node_names = []
+
+node_names += ['nt%d' % i for i in range(1, 26)]
+
+G = nx.Graph()
+
+G.add_nodes_from(node_names)
+
+G.add_edges_from([
+    ('nt1','nt6'),('nt6','nt11'),('nt11','nt16'),('nt16','nt21'),
+    ('nt1','nt2'),('nt6','nt7'),('nt11','nt12'),('nt16','nt17'),('nt22','nt21'),
+    ('nt7','nt2'),('nt12','nt7'),('nt17','nt12'),('nt22','nt17'),
+    ('nt3','nt2'),('nt8','nt7'),('nt13','nt12'),('nt18','nt17'),('nt22','nt23'),
+    ('nt3','nt8'),('nt8','nt13'),('nt13','nt18'),('nt18','nt23'),
+    ('nt3','nt4'),('nt8','nt9'),('nt13','nt14'),('nt18','nt19'),('nt24','nt23'),
+    ('nt9','nt4'),('nt14','nt9'),('nt19','nt14'),('nt24','nt19'),
+    ('nt5','nt4'),('nt10','nt9'),('nt15','nt14'),('nt20','nt19'),('nt24','nt25'),
+    ('nt5','nt10'),('nt10','nt15'),('nt15','nt20'),('nt20','nt25')
+               ])
+centrality = nx.closeness_centrality(G)
 
 
 class PhaseSet:
@@ -210,7 +234,7 @@ class TrafficSimulator:
         self.sim.close()
 
     def update_fingerprint(self, policy):
-        for node_name, pi in zip(self.node_names, policy):
+        for node_name, pi in zip(self.`node_names`, policy):
             self.nodes[node_name].fingerprint = pi
 
     def _get_node_phase(self, action, node_name, phase_type):
@@ -406,8 +430,8 @@ class TrafficSimulator:
                             max_pos = car_pos
                             car_wait = self.sim.vehicle.getWaitingTime(vid)
                     waits.append(car_wait)
-            queue = np.sum(np.array(queues)) if len(queues) else 0
-            wait = np.sum(np.array(waits)) if len(waits) else 0
+            queue = centrality[node_name] * np.sum(np.array(queues)) if len(queues) else 0
+            wait = centrality[node_name] * np.sum(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
             elif self.obj == 'wait':
