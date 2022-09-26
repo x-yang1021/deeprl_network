@@ -186,7 +186,7 @@ class Trainer():
                 logging.info('''Training: global step %d, episode step %d,
                                    ob: %s, a: %s, pi: %s, r: %.2f, train r: %.2f, done: %r''' %
                              (global_step, self.cur_step,
-                              str(ob), str(action), str(policy), global_reward, np.mean(reward), done))
+                              str(ob), str(action), str(policy), global_reward, np.sum(reward), done))
             # terminal check must be inside batch loop for CACC env
             if done:
                 break

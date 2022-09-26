@@ -1,11 +1,14 @@
 import numpy as np
 import tensorflow as tf
+import traci
 
 """
 initializers
 """
 DEFAULT_SCALE = np.sqrt(2)
 DEFAULT_MODE = 'fan_in'
+
+
 
 def ortho_init(scale=DEFAULT_SCALE, mode=None):
     def _ortho_init(shape, dtype, partition_info=None):
@@ -115,7 +118,7 @@ def lstm(xs, dones, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
     return seq_to_batch(xs), tf.squeeze(s)
 
 
-def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
+def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
               init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -139,7 +142,7 @@ def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     b_hid = []
     n_in_hid = 3*n_h
     for i in range(n_agent):
-        n_m = np.sum(masks[i])
+        n_m = int(np.sum(masks[i]))
         # n_in_hid = (n_m+1)*n_h
         with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
             w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h*n_m, n_h],
@@ -189,7 +192,14 @@ def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
             ci = ci * (1-done)
             hi = hi * (1-done)
             # receive neighbor messages
-            mi = tf.expand_dims(tf.reshape(tf.boolean_mask(out_m, masks[i]), [-1]), axis=0)
+            loss_packet = []
+            for j in range(n_agent):
+                d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
+                loss_packet.append(d.tolist())
+            loss_packet = np.array(loss_packet)
+            mi = tf.multiply(out_m, loss_packet)
+            mi = tf.boolean_mask(mi, masks[i])
+            mi = tf.expand_dims(tf.reshape(mi,[-1]), axis=0)
             pi = tf.expand_dims(tf.reshape(tf.boolean_mask(p, masks[i]), [-1]), axis=0)
             xi = tf.expand_dims(tf.reshape(tf.boolean_mask(x, masks[i]), [-1]), axis=0)
             xi = tf.concat([tf.expand_dims(x[i], axis=0), xi], axis=1)
@@ -217,7 +227,7 @@ def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     return xs, s
 
 
-def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                      init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -294,6 +304,7 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
         out_m = [tf.expand_dims(h[i], axis=0) for i in range(n_agent)]
         out_m = tf.concat(out_m, axis=0) # Nxn_h
         # hidden phase
+
         for i in range(n_agent):
             ci = tf.expand_dims(c[i], axis=0)
             hi = tf.expand_dims(h[i], axis=0)
@@ -305,7 +316,13 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
             pi = []
             xi = [tf.slice(x, [i, 0], [1, n_s_ls[i]])]
             if n_m:
-                mi = tf.expand_dims(tf.reshape(tf.boolean_mask(out_m, masks[i]), [-1]), axis=0)
+                for j in range(n_h):
+                    N = n_h
+                    d = []
+                    loss_packet = []
+                    d = np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]])
+                    loss_packet.append(d)
+                mi = tf.expand_dims(tf.reshape(tf.multiply(out_m, loss_packet), [-1]), axis=0)
                 raw_pi = tf.boolean_mask(p, masks[i]) # n_n*n_a
                 raw_xi = tf.boolean_mask(x, masks[i])
                 # find the valid information based on each agent's s, a dim
@@ -599,7 +616,7 @@ def lstm_dial(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     return xs, s
 
 
-def lstm_dial_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_dial_hetero(xs, ps, dones, masks, loss, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                      init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2

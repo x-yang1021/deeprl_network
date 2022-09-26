@@ -234,7 +234,7 @@ class TrafficSimulator:
         self.sim.close()
 
     def update_fingerprint(self, policy):
-        for node_name, pi in zip(self.`node_names`, policy):
+        for node_name, pi in zip(self.node_names, policy):
             self.nodes[node_name].fingerprint = pi
 
     def _get_node_phase(self, action, node_name, phase_type):
