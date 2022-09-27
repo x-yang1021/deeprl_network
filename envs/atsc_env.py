@@ -17,7 +17,6 @@ SEC_IN_MS = 1000
 VEH_LEN_M = 7.5 # effective vehicle length
 QUEUE_MAX = 10
 
-import networkx as nx
 
 node_names = []
 

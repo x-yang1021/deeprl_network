@@ -12,19 +12,18 @@ import seaborn as sns
 import time
 from envs.atsc_env import PhaseMap, PhaseSet, TrafficSimulator
 from envs.large_grid_data.build_file import gen_rou_file
-import traci
 
 sns.set_color_codes()
 
 
 STATE_NAMES = ['wave']
-PHASE_NUM = 5
+PHASE_NUM = 6
 
 
 class LargeGridPhase(PhaseMap):
     def __init__(self):
-        phases = ['GGgrrrGGgrrr', 'rrrGrGrrrGrG', 'rrrGGrrrrGGr',
-                  'rrrGGGrrrrrr', 'rrrrrrrrrGGG']
+        phases = ['GGGgrrrrGGGgrrrr', 'GrrGrrrrGrrGrrrr', 'GGGrrrrrGGGrrrrr',
+                  'rrrrGGGgrrrrGGGg', 'rrrrGrrGrrrrGrrG', 'rrrrGGGrrrrrGGGr']
         self.phases = {PHASE_NUM: PhaseSet(phases)}
 
 

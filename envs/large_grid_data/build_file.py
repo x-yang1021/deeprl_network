@@ -114,10 +114,10 @@ def get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node):
     str_cons += get_con_str(con, n_node, cur_node, s_node, 0, 0)
     str_cons += get_con_str(con, w_node, cur_node, e_node, 0, 0)
     str_cons += get_con_str(con, e_node, cur_node, w_node, 0, 0)
-    # str_cons += get_con_str(con, s_node, cur_node, n_node, 1, 1)
-    # str_cons += get_con_str(con, n_node, cur_node, s_node, 1, 1)
-    # str_cons += get_con_str(con, w_node, cur_node, e_node, 1, 1)
-    # str_cons += get_con_str(con, e_node, cur_node, w_node, 1, 1)
+    str_cons += get_con_str(con, s_node, cur_node, n_node, 1, 1)
+    str_cons += get_con_str(con, n_node, cur_node, s_node, 1, 1)
+    str_cons += get_con_str(con, w_node, cur_node, e_node, 1, 1)
+    str_cons += get_con_str(con, e_node, cur_node, w_node, 1, 1)
 
     # left-turn
     str_cons += get_con_str(con, s_node, cur_node, w_node, 1, 1)
@@ -409,9 +409,12 @@ def output_ild(ild):
 def output_tls(tls, phase):
     str_adds = '<additional>\n'
     # all crosses have 3 phases
-    three_phases = ['GGgrrrGGgrrr', 'yyyrrryyyrrr',
-                    'rrrGrGrrrGrG', 'rrrGryrrrGry',
-                    'rrrGGrrrrGGr', 'rrryyrrrryyr']
+    three_phases = ['GGGgrrrrGGGgrrrr', 'GGGyrrrrGGGyrrrr',
+                    'GGGrrrrrGGGrrrrr', 'GyyGrrrrGyyGrrrr',
+                    'GrrGrrrrGrrGrrrr', 'yrryrrrryrryrrrr',
+                    'rrrrGGGgrrrrGGGg', 'rrrrGGGyrrrrGGGy',
+                    'rrrrGGGrrrrrGGGr', 'rrrrGyyrrrrrGyyr',
+                    'rrrrGrrGrrrrGrrG']
     phase_duration = [30, 3]
     for i in range(1, 26):
         node = 'nt' + str(i)
