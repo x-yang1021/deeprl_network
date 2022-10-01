@@ -17,10 +17,10 @@ class IA2C:
     The basic IA2C implementation with decentralized actor and centralized critic,
     limited to neighborhood area only.
     """
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ia2c'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, naction, action, reward, value, done):
@@ -190,10 +190,10 @@ class IA2C_FP(IA2C):
 
 
 class MA2C_NC(IA2C):
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask,loss_rate, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ma2c_nc'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask,loss_rate, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, p, action, reward, value, done):
@@ -277,7 +277,7 @@ class IA2C_CU(MA2C_NC):
 
 
 class MA2C_IC3(MA2C_NC):
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, loss_rate, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask,  coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ma2c_ic3'
         self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
@@ -286,7 +286,7 @@ class MA2C_IC3(MA2C_NC):
     def _init_policy(self):
         if self.identical_agent:
             return IC3MultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
-                                       self.neighbor_mask,self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm)
+                                       self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm)
         else:
             return IC3MultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
                                        self.neighbor_mask, self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm,

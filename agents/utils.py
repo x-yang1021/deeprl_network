@@ -194,7 +194,7 @@ def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCAL
             # receive neighbor messages
             loss_packet = []
             for j in range(n_agent):
-                print(loss_rate[i, j])
+                print('test', loss_rate[i,j])
                 d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
                 loss_packet.append(d.tolist())
             loss_packet = np.array(loss_packet)
@@ -359,13 +359,47 @@ def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, 
     return xs, s
 
 
-def lstm_ic3(xs, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
+def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
              init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
     n_s = xs.shape[-1]
     xs = tf.transpose(xs, perm=[1,0,2]) # TxNxn_s
     xs = batch_to_seq(xs)
+
+    distance = np.zeros((n_agent, n_agent))
+    for i in range(n_agent):
+        for j in range(n_agent):
+            if masks[i, j] == 1:
+                if abs(i - j) == 5:
+                    distance[i][j] = distance[j][i] = 150
+                if abs(i - j) == 1:
+                    distance[i][j] = distance[j][i] = 200
+            else:
+                distance[i][j] = 0
+    loss_distance = {0: 0,
+                     25: 0.96,
+                     50: 0.96,
+                     75: 0.93,
+                     100: 0.91,
+                     125: 0.88,
+                     150: 0.88,
+                     175: 0.83,
+                     200: 0.78,
+                     225: 0.75,
+                     250: 0.75,
+                     275: 0.69,
+                     300: 0.67,
+                     325: 0.65,
+                     350: 0.63,
+                     375: 0.63,
+                     400: 0.58,
+                     425: 0.5,
+                     450: 0.5}
+    loss_rate = np.zeros((n_agent, n_agent))
+    for i in range(n_agent):
+        for j in range(n_agent):
+            loss_rate[i, j] = loss_distance[distance[i, j]]
     # need dones to reset states
     dones = batch_to_seq(dones) # Tx1
     # create wts
@@ -412,7 +446,6 @@ def lstm_ic3(xs, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, in
             # receive neighbor messages
             loss_packet = []
             for j in range(n_agent):
-                print(loss_rate[i, j])
                 d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[(loss_rate[i, j]), (1 - loss_rate[i, j])]))
                 loss_packet.append(d.tolist())
             loss_packet = np.array(loss_packet)
@@ -443,7 +476,7 @@ def lstm_ic3(xs, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, in
     return xs, s
 
 
-def lstm_ic3_hetero(xs, dones, masks, s, n_s_ls, loss_rate, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_ic3_hetero(xs, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                     init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2

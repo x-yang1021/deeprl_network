@@ -191,7 +191,7 @@ class NCMultiAgentPolicy(Policy):
     zeros during runtime."""
     def __init__(self, n_s, n_a, n_agent, n_step, neighbor_mask, loss_rate, n_fc=64, n_h=64,
                  n_s_ls=None, n_a_ls=None, identical=True):
-        Policy.__init__(self, n_a, n_s, n_step, 'nc', None, identical)
+        Policy.__init__(self, n_a, n_s, n_step, loss_rate, 'nc', None, identical)
         if not self.identical:
             self.n_s_ls = n_s_ls
             self.n_a_ls = n_a_ls
@@ -284,7 +284,7 @@ class NCMultiAgentPolicy(Policy):
             action = self.action_bw
             done = self.done_bw
         if self.identical:
-            h, new_states = lstm_comm(ob, policy, done, self.neighbor_mask,self.loss_rate, self.states, 'lstm_comm')
+            h, new_states = lstm_comm(ob, policy, done, self.neighbor_mask, self.loss_rate, self.states, 'lstm_comm')
         else:
             h, new_states = lstm_comm_hetero(ob, policy, done, self.neighbor_mask, self.states,
                                              self.n_s_ls, self.n_a_ls, 'lstm_comm')
@@ -311,10 +311,9 @@ class NCMultiAgentPolicy(Policy):
             pi_ls = tf.squeeze(tf.concat(pi_ls, axis=0))
         return pi_ls, tf.squeeze(tf.concat(v_ls, axis=0)), new_states
 
-    def _init_policy(self, n_agent, neighbor_mask, loss_rate, n_h):
+    def _init_policy(self, n_agent, neighbor_mask, n_h):
         self.n_agent = n_agent
         self.neighbor_mask = neighbor_mask#n_agent x n_agent
-        self.loss_rate = loss_rate
         self.n_h = n_h
         self.ob_fw = tf.compat.v1.placeholder(tf.float32, [n_agent, 1, self.n_s]) # forward 1-step
         self.policy_fw = tf.compat.v1.placeholder(tf.float32, [n_agent, 1, self.n_a])
@@ -431,13 +430,13 @@ class IC3MultiAgentPolicy(NCMultiAgentPolicy):
     """Reference code: https://github.com/IC3Net/IC3Net/blob/master/comm.py.
        Note in IC3, the message is generated from hidden state only, so current state
        and neigbor policies are not included in the inputs."""
-    def __init__(self, n_s, n_a, n_agent, n_step, neighbor_mask, loss_rate, n_fc=64, n_h=64,
+    def __init__(self, n_s, n_a, n_agent, n_step, neighbor_mask, n_fc=64, n_h=64,
                  n_s_ls=None, n_a_ls=None, identical=True):
-        super().__init__(n_a, n_s, n_step, loss_rate, 'ic3', None, identical)
+        Policy.__init__(self, n_a, n_s, n_step, 'ic3', None, identical)
         if not self.identical:
             self.n_s_ls = n_s_ls
             self.n_a_ls = n_a_ls
-        self._init_policy(n_agent, neighbor_mask, loss_rate, n_h)
+        self._init_policy(n_agent, neighbor_mask, n_h)
 
     def _build_net(self, in_type):
         if in_type == 'forward':
@@ -449,9 +448,9 @@ class IC3MultiAgentPolicy(NCMultiAgentPolicy):
             action = self.action_bw
             done = self.done_bw
         if self.identical:
-            h, new_states = lstm_ic3(ob, done, self.neighbor_mask, self.loss_rate, self.states, 'lstm_ic3')
+            h, new_states = lstm_ic3(ob, done, self.neighbor_mask, self.states, 'lstm_ic3')
         else:
-            h, new_states = lstm_ic3_hetero(ob, done, self.neighbor_mask, self.loss_rate, self.states,
+            h, new_states = lstm_ic3_hetero(ob, done, self.neighbor_mask, self.states,
                                             self.n_s_ls, self.n_a_ls, 'lstm_ic3')
         pi_ls = []
         v_ls = []

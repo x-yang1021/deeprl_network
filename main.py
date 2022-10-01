@@ -56,7 +56,7 @@ def init_env(config, port=0):
 
 def init_agent(env, config, total_step, seed):
     if env.agent == 'ia2c':
-        return IA2C(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
+        return IA2C(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
                     total_step, config, seed=seed)
     elif env.agent == 'ia2c_fp':
         return IA2C_FP(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
