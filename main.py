@@ -22,7 +22,7 @@ tf.compat.v1.disable_eager_execution()
 
 def parse_args():
     default_base_dir = '/Users/yang/Documents/GitHub/deeprl_network/test'
-    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ma2c_nc_grid.ini'
+    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ma2c_cnet_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,
                         default=default_base_dir, help="experiment base dir")
@@ -66,7 +66,7 @@ def init_agent(env, config, total_step, seed):
                        total_step, config, seed=seed)
     elif env.agent == 'ma2c_ic3':
         # this is actually CommNet
-        return MA2C_IC3(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
+        return MA2C_IC3(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
                         total_step, config, seed=seed)
     elif env.agent == 'ma2c_cu':
         return IA2C_CU(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
@@ -106,11 +106,6 @@ def train(args):
     summary_writer = tf.compat.v1.summary.FileWriter(dirs['log'])
     trainer = Trainer(env, model, global_counter, summary_writer, output_path=dirs['data'])
     trainer.run()
-    # counter = 0
-    # if 'f1_1.1' in traci.vehicle.getIDList() and counter < 100:
-    #     a = traci.vehicle.getRoadID('f1_1.1')
-    #     traci.vehicle.setStop(vehID='f1_1.1', edgeID=a, pos=70, duration=10)
-    #     counter += 1
 
     # save model
     final_step = global_counter.cur_step

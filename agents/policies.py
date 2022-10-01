@@ -191,7 +191,7 @@ class NCMultiAgentPolicy(Policy):
     zeros during runtime."""
     def __init__(self, n_s, n_a, n_agent, n_step, neighbor_mask, loss_rate, n_fc=64, n_h=64,
                  n_s_ls=None, n_a_ls=None, identical=True):
-        super().__init__(n_a, n_s, n_step, 'nc', None, identical)
+        Policy.__init__(self, n_a, n_s, n_step, 'nc', None, identical)
         if not self.identical:
             self.n_s_ls = n_s_ls
             self.n_a_ls = n_a_ls
@@ -433,7 +433,7 @@ class IC3MultiAgentPolicy(NCMultiAgentPolicy):
        and neigbor policies are not included in the inputs."""
     def __init__(self, n_s, n_a, n_agent, n_step, neighbor_mask, loss_rate, n_fc=64, n_h=64,
                  n_s_ls=None, n_a_ls=None, identical=True):
-        Policy.__init__(self, n_a, n_s, n_step, 'ic3', None, identical)
+        super().__init__(n_a, n_s, n_step, loss_rate, 'ic3', None, identical)
         if not self.identical:
             self.n_s_ls = n_s_ls
             self.n_a_ls = n_a_ls
@@ -449,9 +449,9 @@ class IC3MultiAgentPolicy(NCMultiAgentPolicy):
             action = self.action_bw
             done = self.done_bw
         if self.identical:
-            h, new_states = lstm_ic3(ob, done, self.neighbor_mask, self.states, 'lstm_ic3')
+            h, new_states = lstm_ic3(ob, done, self.neighbor_mask, self.loss_rate, self.states, 'lstm_ic3')
         else:
-            h, new_states = lstm_ic3_hetero(ob, done, self.neighbor_mask, self.states,
+            h, new_states = lstm_ic3_hetero(ob, done, self.neighbor_mask, self.loss_rate, self.states,
                                             self.n_s_ls, self.n_a_ls, 'lstm_ic3')
         pi_ls = []
         v_ls = []

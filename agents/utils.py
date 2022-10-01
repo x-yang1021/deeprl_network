@@ -194,6 +194,7 @@ def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCAL
             # receive neighbor messages
             loss_packet = []
             for j in range(n_agent):
+                print(loss_rate[i, j])
                 d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
                 loss_packet.append(d.tolist())
             loss_packet = np.array(loss_packet)
@@ -358,7 +359,7 @@ def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, 
     return xs, s
 
 
-def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
+def lstm_ic3(xs, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
              init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -376,7 +377,7 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
     wh_hid = []
     b_hid = []
     for i in range(n_agent):
-        n_m = np.sum(masks[i])
+        n_m = int(np.sum(masks[i]))
         with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
             w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h, n_h],
                                          initializer=init_method(init_scale, init_mode)))
@@ -409,7 +410,15 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
             ci = ci * (1-done)
             hi = hi * (1-done)
             # receive neighbor messages
-            mi = tf.reduce_mean(tf.boolean_mask(out_m, masks[i]), axis=0, keepdims=True)
+            loss_packet = []
+            for j in range(n_agent):
+                print(loss_rate[i, j])
+                d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[(loss_rate[i, j]), (1 - loss_rate[i, j])]))
+                loss_packet.append(d.tolist())
+            loss_packet = np.array(loss_packet)
+            mi = tf.multiply(out_m, loss_packet)
+            mi = tf.boolean_mask(mi, masks[i])
+            mi = tf.reduce_mean(mi, axis=0, keepdims=True)
             # the state encoder in IC3 code is not consistent with that described in the paper.
             # Here we follow the impelmentation in the paper.
             xi = tf.expand_dims(tf.reshape(tf.boolean_mask(x, masks[i]), [-1]), axis=0)
@@ -434,7 +443,7 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
     return xs, s
 
 
-def lstm_ic3_hetero(xs, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_ic3_hetero(xs, dones, masks, s, n_s_ls, loss_rate, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                     init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
