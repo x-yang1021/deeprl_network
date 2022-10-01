@@ -12,7 +12,7 @@ import traci
 import xml.etree.cElementTree as ET
 import networkx as nx
 
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8813
 SEC_IN_MS = 1000
 VEH_LEN_M = 7.5 # effective vehicle length
 QUEUE_MAX = 10
@@ -372,7 +372,7 @@ class TrafficSimulator:
         command += ['--seed', str(seed)]
         command += ['--remote-port', str(self.port)]
         command += ['--no-step-log', 'True']
-        command += ['--time-to-teleport', '600'] # long teleport for safety
+        # command += ['--time-to-teleport', '600'] # long teleport for safety
         command += ['--no-warnings', 'True']
         command += ['--duration-log.disable', 'True']
         # collect trip info if necessary

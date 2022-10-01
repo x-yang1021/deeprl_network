@@ -6,6 +6,7 @@ import time
 import os
 import pandas as pd
 import subprocess
+import traci
 
 
 def check_dir(cur_dir):
@@ -198,7 +199,7 @@ class Trainer():
             R = self._get_value(ob, done, action)
         return ob, done, R
 
-    def perform(self, test_ind, gui=True):
+    def perform(self, test_ind, gui=False):
         ob = self.env.reset(gui=gui, test_ind=test_ind)
         rewards = []
         # note this done is pre-decision to reset LSTM states!
@@ -227,7 +228,7 @@ class Trainer():
     def run(self):
         while not self.global_counter.should_stop():
             # np.random.seed(self.env.seed)
-            ob = self.env.reset(gui=True)
+            ob = self.env.reset()
             # note this done is pre-decision to reset LSTM states!
             done = True
             self.model.reset()

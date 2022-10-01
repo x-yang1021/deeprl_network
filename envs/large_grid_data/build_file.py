@@ -189,7 +189,6 @@ def output_connections(con):
         e_node = 'nt' + str(i + 1)
         cur_node = 'nt' + str(i)
         str_cons += get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node)
-    print(str_cons)
     str_cons += '</connections>\n'
     return str_cons
 
@@ -278,7 +277,7 @@ def init_routes(density):
             k += 1
     return output
 
-def output_flows(peak_flow1, peak_flow2, density, seed=None):
+def output_flows(peak_flow1, peak_flow2, density, seed=None): #1000 2000 0.2
     '''
     flow1: x11, x12, x13, x14, x15 -> x1, x2, x3, x4, x5
     flow2: x16, x17, x18, x19, x20 -> x6, x7, x8, x9, x10
@@ -335,7 +334,7 @@ def output_flows(peak_flow1, peak_flow2, density, seed=None):
                     cur_name = name + '_' + str(k)
                     str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i - id2])
                     k += 1
-    str_flows += '</routes>\n'
+    str_flows +='</routes>\n'
     return str_flows
 
 
@@ -466,6 +465,7 @@ def main():
 
     # config file
     write_file('./exp.sumocfg', output_config())
+
 
 if __name__ == '__main__':
     main()

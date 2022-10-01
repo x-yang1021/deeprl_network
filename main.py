@@ -16,12 +16,13 @@ from utils import (Counter, Trainer, Tester, Evaluator,
                    check_dir, copy_file, find_file,
                    init_dir, init_log, init_test_flag,
                    plot_evaluation, plot_train)
+import traci
 
 tf.compat.v1.disable_eager_execution()
 
 def parse_args():
     default_base_dir = '/Users/yang/Documents/GitHub/deeprl_network/test'
-    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ia2c_grid.ini'
+    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ma2c_nc_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,
                         default=default_base_dir, help="experiment base dir")
@@ -29,7 +30,7 @@ def parse_args():
     sp = subparsers.add_parser('train', help='train a single agent under base dir')
     sp.add_argument('--config-dir', type=str, required=False,
                     default=default_config_dir, help="experiment config path")
-    sp.add_argument('--demo', action='store_true', help="shows SUMO gui")
+    # sp.add_argument('--demo', action='store_true', help="shows SUMO gui")
     sp = subparsers.add_parser('evaluate', help="evaluate and compare agents under base dir")
     sp.add_argument('--evaluation-seeds', type=str, required=False,
                     default=','.join([str(i) for i in range(2000, 2500, 10)]),
@@ -91,7 +92,6 @@ def train(args):
     env = init_env(config['ENV_CONFIG'])
     logging.info('Training: a dim %r, agent dim: %d' % (env.n_a_ls, env.n_agent))
 
-
     # init step counter
     total_step = int(config.getfloat('TRAIN_CONFIG', 'total_step'))
     test_step = int(config.getfloat('TRAIN_CONFIG', 'test_interval'))
@@ -106,6 +106,11 @@ def train(args):
     summary_writer = tf.compat.v1.summary.FileWriter(dirs['log'])
     trainer = Trainer(env, model, global_counter, summary_writer, output_path=dirs['data'])
     trainer.run()
+    # counter = 0
+    # if 'f1_1.1' in traci.vehicle.getIDList() and counter < 100:
+    #     a = traci.vehicle.getRoadID('f1_1.1')
+    #     traci.vehicle.setStop(vehID='f1_1.1', edgeID=a, pos=70, duration=10)
+    #     counter += 1
 
     # save model
     final_step = global_counter.cur_step

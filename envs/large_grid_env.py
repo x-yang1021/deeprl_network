@@ -12,6 +12,7 @@ import seaborn as sns
 import time
 from envs.atsc_env import PhaseMap, PhaseSet, TrafficSimulator
 from envs.large_grid_data.build_file import gen_rou_file
+import traci
 
 sns.set_color_codes()
 
