@@ -103,17 +103,17 @@ class IA2C:
         self.n_fc = model_config.getint('num_fc')
         self.n_lstm = model_config.getint('num_lstm')
         # init tf
-        tf.reset_default_graph()
-        tf.set_random_seed(seed)
-        config = tf.ConfigProto(allow_soft_placement=True)
-        self.sess = tf.Session(config=config)
+        tf.compat.v1.reset_default_graph()
+        tf.compat.v1.set_random_seed(seed)
+        config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
+        self.sess = tf.compat.v1.Session(config=config)
         self.policy = self._init_policy()
-        self.saver = tf.train.Saver(max_to_keep=5)
+        self.saver = tf.compat.v1.train.Saver(max_to_keep=5)
         # init exp buffer and lr scheduler for training
         if total_step:
             self.total_step = total_step
             self._init_train(model_config, distance_mask, coop_gamma)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
     def _init_policy(self):
         policy = []

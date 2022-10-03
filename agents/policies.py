@@ -230,12 +230,12 @@ class NCMultiAgentPolicy(Policy):
         return out_value
 
     def prepare_loss(self, v_coef, e_coef, max_grad_norm, alpha, epsilon):
-        self.ADV = tf.placeholder(tf.float32, [self.n_agent, self.n_step])
-        self.R = tf.placeholder(tf.float32, [self.n_agent, self.n_step])
+        self.ADV = tf.compat.v1.placeholder(tf.float32, [self.n_agent, self.n_step])
+        self.R = tf.compat.v1.placeholder(tf.float32, [self.n_agent, self.n_step])
         # all losses are averaged over steps but summed over agents
         if self.identical:
             A_sparse = tf.one_hot(self.action_bw, self.n_a)
-            log_pi = tf.log(tf.clip_by_value(self.pi, 1e-10, 1.0))
+            log_pi = tf.math.log(tf.clip_by_value(self.pi, 1e-10, 1.0))
             entropy = -tf.reduce_sum(self.pi * log_pi, axis=-1) # NxT
             prob_pi = tf.reduce_sum(log_pi * A_sparse, axis=-1) # NxT
         else:
@@ -244,7 +244,7 @@ class NCMultiAgentPolicy(Policy):
             for i, pi_i in enumerate(self.pi):
                 action_i = tf.slice(self.action_bw, [i, 0], [1, self.n_step])
                 A_sparse_i = tf.one_hot(action_i, self.n_a_ls[i])
-                log_pi_i = tf.log(tf.clip_by_value(pi_i, 1e-10, 1.0))
+                log_pi_i = tf.math.log(tf.clip_by_value(pi_i, 1e-10, 1.0))
                 entropy.append(tf.expand_dims(-tf.reduce_sum(pi_i * log_pi_i, axis=-1), axis=0))
                 prob_pi.append(tf.expand_dims(tf.reduce_sum(log_pi_i * A_sparse_i, axis=-1), axis=0))
             entropy = tf.concat(entropy, axis=0)
@@ -254,23 +254,23 @@ class NCMultiAgentPolicy(Policy):
         value_loss = tf.reduce_sum(tf.reduce_mean(tf.square(self.R - self.v), axis=-1)) * 0.5 * v_coef
         self.loss = policy_loss + value_loss + entropy_loss
 
-        wts = tf.trainable_variables(scope=self.name)
+        wts = tf.compat.v1.trainable_variables(scope=self.name)
         grads = tf.gradients(self.loss, wts)
         if max_grad_norm > 0:
             grads, self.grad_norm = tf.clip_by_global_norm(grads, max_grad_norm)
-        self.lr = tf.placeholder(tf.float32, [])
-        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=self.lr, decay=alpha,
+        self.lr = tf.compat.v1.placeholder(tf.float32, [])
+        self.optimizer = tf.compat.v1.train.RMSPropOptimizer(learning_rate=self.lr, decay=alpha,
                                                    epsilon=epsilon)
         self._train = self.optimizer.apply_gradients(list(zip(grads, wts)))
         # monitor training
         summaries = []
-        summaries.append(tf.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
-        summaries.append(tf.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
-        summaries.append(tf.summary.scalar('train/%s_lr' % self.name, self.lr))
-        summaries.append(tf.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
-        self.summary = tf.summary.merge(summaries)
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_lr' % self.name, self.lr))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
+        self.summary = tf.compat.v1.summary.merge(summaries)
 
     def _build_net(self, in_type):
         if in_type == 'forward':
@@ -315,19 +315,19 @@ class NCMultiAgentPolicy(Policy):
         self.n_agent = n_agent
         self.neighbor_mask = neighbor_mask #n_agent x n_agent
         self.n_h = n_h
-        self.ob_fw = tf.placeholder(tf.float32, [n_agent, 1, self.n_s]) # forward 1-step
-        self.policy_fw = tf.placeholder(tf.float32, [n_agent, 1, self.n_a])
-        self.action_fw = tf.placeholder(tf.int32, [n_agent, 1])
-        self.done_fw = tf.placeholder(tf.float32, [1])
-        self.ob_bw = tf.placeholder(tf.float32, [n_agent, self.n_step, self.n_s]) # backward n-step
-        self.policy_bw = tf.placeholder(tf.float32, [n_agent, self.n_step, self.n_a])
-        self.action_bw = tf.placeholder(tf.int32, [n_agent, self.n_step])
-        self.done_bw = tf.placeholder(tf.float32, [self.n_step])
-        self.states = tf.placeholder(tf.float32, [n_agent, n_h * 2])
+        self.ob_fw = tf.compat.v1.placeholder(tf.float32, [n_agent, 1, self.n_s]) # forward 1-step
+        self.policy_fw = tf.compat.v1.placeholder(tf.float32, [n_agent, 1, self.n_a])
+        self.action_fw = tf.compat.v1.placeholder(tf.int32, [n_agent, 1])
+        self.done_fw = tf.compat.v1.placeholder(tf.float32, [1])
+        self.ob_bw = tf.compat.v1.placeholder(tf.float32, [n_agent, self.n_step, self.n_s]) # backward n-step
+        self.policy_bw = tf.compat.v1.placeholder(tf.float32, [n_agent, self.n_step, self.n_a])
+        self.action_bw = tf.compat.v1.placeholder(tf.int32, [n_agent, self.n_step])
+        self.done_bw = tf.compat.v1.placeholder(tf.float32, [self.n_step])
+        self.states = tf.compat.v1.placeholder(tf.float32, [n_agent, n_h * 2])
 
-        with tf.variable_scope(self.name):
+        with tf.compat.v1.variable_scope(self.name):
             self.pi_fw, self.v_fw, self.new_states = self._build_net('forward')
-        with tf.variable_scope(self.name, reuse=True):
+        with tf.compat.v1.variable_scope(self.name, reuse=True):
             self.pi, self.v, _ = self._build_net('backward')
         self._reset()
 

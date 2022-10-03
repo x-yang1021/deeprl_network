@@ -17,6 +17,7 @@ from utils import (Counter, Trainer, Tester, Evaluator,
                    init_dir, init_log, init_test_flag,
                    plot_evaluation, plot_train)
 
+tf.compat.v1.disable_eager_execution()
 
 def parse_args():
     default_base_dir = '/Users/tchu/Documents/rl_test/deeprl_dist/ia2c_grid_0.9'
@@ -99,7 +100,7 @@ def train(args):
     model = init_agent(env, config['MODEL_CONFIG'], total_step, seed)
 
     # disable multi-threading for safe SUMO implementation
-    summary_writer = tf.summary.FileWriter(dirs['log'])
+    summary_writer = tf.compat.v1.summary.FileWriter(dirs['log'])
     trainer = Trainer(env, model, global_counter, summary_writer, output_path=dirs['data'])
     trainer.run()
 

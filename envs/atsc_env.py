@@ -187,6 +187,7 @@ class TrafficSimulator:
         state = self._get_state()
         reward = self._measure_reward_step()
         done = False
+        print(state,action)
         if self.cur_sec >= self.episode_length_sec:
             done = True
         global_reward = np.sum(reward)
