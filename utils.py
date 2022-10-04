@@ -100,7 +100,7 @@ class Counter:
 
 
 class Trainer():
-    def __init__(self, env, model, global_counter, summary_writer, output_path=None, gui=False):
+    def __init__(self, env, model, global_counter, summary_writer, output_path=None, gui=True):
         self.cur_step = 0
         self.global_counter = global_counter
         self.env = env

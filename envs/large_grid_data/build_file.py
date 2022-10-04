@@ -50,7 +50,6 @@ def output_nodes(node):
         ind += 1
     str_nodes += '</nodes>\n'
     return str_nodes
-    print(str_nodes)
 
 
 def output_road_types():
@@ -413,7 +412,7 @@ def output_tls(tls, phase):
                     'GrrGrrrrGrrGrrrr', 'yrryrrrryrryrrrr',
                     'rrrrGGGgrrrrGGGg', 'rrrrGGGyrrrrGGGy',
                     'rrrrGGGrrrrrGGGr', 'rrrrGyyrrrrrGyyr',
-                    'rrrrGrrGrrrrGrrG']
+                    'rrrrGrrGrrrrGrrG', 'rrrryrryrrrryrry']
     phase_duration = [30, 3]
     for i in range(1, 26):
         node = 'nt' + str(i)
