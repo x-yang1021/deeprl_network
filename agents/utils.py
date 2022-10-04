@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import traci
 
 """
 initializers
@@ -7,11 +8,13 @@ initializers
 DEFAULT_SCALE = np.sqrt(2)
 DEFAULT_MODE = 'fan_in'
 
+
+
 def ortho_init(scale=DEFAULT_SCALE, mode=None):
     def _ortho_init(shape, dtype, partition_info=None):
         # lasagne ortho init for tf
         shape = tuple(shape)
-        if len(shape) == 2: # fc: in, out
+        if len(shape) == 2: # fc: in, out (fully connected)
             flat_shape = shape
         elif (len(shape) == 3) or (len(shape) == 4): # 1d/2dcnn: (in_h), in_w, in_c, out
             flat_shape = (np.prod(shape[:-1]), shape[-1])
@@ -45,18 +48,18 @@ layers
 """
 def conv(x, scope, n_out, f_size, stride=1, pad='VALID', f_size_w=None, act=tf.nn.relu,
          conv_dim=1, init_scale=DEFAULT_SCALE, init_mode=None, init_method=DEFAULT_METHOD):
-    with tf.variable_scope(scope):
-        b = tf.get_variable("b", [n_out], initializer=tf.constant_initializer(0.0))
+    with tf.compat.v1.variable_scope(scope):
+        b = tf.compat.v1.get_variable("b", [n_out], initializer=tf.constant_initializer(0.0))
         if conv_dim == 1:
-            n_c = x.shape[2].value
-            w = tf.get_variable("w", [f_size, n_c, n_out],
+            n_c = x.shape[2]
+            w = tf.compat.v1.get_variable("w", [f_size, n_c, n_out],
                                 initializer=init_method(init_scale, init_mode))
             z = tf.nn.conv1d(x, w, stride=stride, padding=pad) + b
         elif conv_dim == 2:
-            n_c = x.shape[3].value
+            n_c = x.shape[3]
             if f_size_w is None:
                 f_size_w = f_size
-            w = tf.get_variable("w", [f_size, f_size_w, n_c, n_out],
+            w = tf.compat.v1.get_variable("w", [f_size, f_size_w, n_c, n_out],
                                 initializer=init_method(init_scale, init_mode))
             z = tf.nn.conv2d(x, w, strides=[1, stride, stride, 1], padding=pad) + b
         return act(z)
@@ -89,14 +92,14 @@ def lstm(xs, dones, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
     xs = batch_to_seq(xs)
     # need dones to reset states
     dones = batch_to_seq(dones)
-    n_in = xs[0].shape[1].value
+    n_in = xs[0].shape[1]
     n_out = s.shape[0] // 2
-    with tf.variable_scope(scope):
-        wx = tf.get_variable("wx", [n_in, n_out*4],
+    with tf.compat.v1.variable_scope(scope):
+        wx = tf.compat.v1.get_variable("wx", [n_in, n_out*4],
                              initializer=init_method(init_scale, init_mode))
-        wh = tf.get_variable("wh", [n_out, n_out*4],
+        wh = tf.compat.v1.get_variable("wh", [n_out, n_out*4],
                              initializer=init_method(init_scale, init_mode))
-        b = tf.get_variable("b", [n_out*4], initializer=tf.constant_initializer(0.0))
+        b = tf.compat.v1.get_variable("b", [n_out*4], initializer=tf.constant_initializer(0.0))
     s = tf.expand_dims(s, 0)
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     for ind, (x, done) in enumerate(zip(xs, dones)):
@@ -115,7 +118,7 @@ def lstm(xs, dones, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
     return seq_to_batch(xs), tf.squeeze(s)
 
 
-def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
+def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
               init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -189,7 +192,15 @@ def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
             ci = ci * (1-done)
             hi = hi * (1-done)
             # receive neighbor messages
-            mi = tf.expand_dims(tf.reshape(tf.boolean_mask(out_m, masks[i]), [-1]), axis=0)
+            loss_packet = []
+            for j in range(n_agent):
+                print('test', loss_rate[i,j])
+                d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
+                loss_packet.append(d.tolist())
+            loss_packet = np.array(loss_packet)
+            mi = tf.multiply(out_m, loss_packet)
+            mi = tf.boolean_mask(mi, masks[i])
+            mi = tf.expand_dims(tf.reshape(mi,[-1]), axis=0)
             pi = tf.expand_dims(tf.reshape(tf.boolean_mask(p, masks[i]), [-1]), axis=0)
             xi = tf.expand_dims(tf.reshape(tf.boolean_mask(x, masks[i]), [-1]), axis=0)
             xi = tf.concat([tf.expand_dims(x[i], axis=0), xi], axis=1)
@@ -217,7 +228,7 @@ def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     return xs, s
 
 
-def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                      init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -256,30 +267,30 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
             n_in_hid = 3*n_h
         else:
             n_in_hid = n_h
-        with tf.variable_scope(scope + ('_%d' % i)):
-            w_ob.append(tf.get_variable("w_ob", [n_s, n_h],
+        with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
+            w_ob.append(tf.compat.v1.get_variable("w_ob", [n_s, n_h],
                                         initializer=init_method(init_scale, init_mode)))
-            b_ob.append(tf.get_variable("b_ob", [n_h],
+            b_ob.append(tf.compat.v1.get_variable("b_ob", [n_h],
                                         initializer=tf.constant_initializer(0.0)))
             if n_m:
-                w_fp.append(tf.get_variable("w_fp", [n_fp, n_h],
+                w_fp.append(tf.compat.v1.get_variable("w_fp", [n_fp, n_h],
                                             initializer=init_method(init_scale, init_mode)))
-                b_fp.append(tf.get_variable("b_fp", [n_h],
+                b_fp.append(tf.compat.v1.get_variable("b_fp", [n_h],
                                             initializer=tf.constant_initializer(0.0)))
-                w_msg.append(tf.get_variable("w_msg", [n_h*n_m, n_h],
+                w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h*n_m, n_h],
                                              initializer=init_method(init_scale, init_mode)))
-                b_msg.append(tf.get_variable("b_msg", [n_h],
+                b_msg.append(tf.compat.v1.get_variable("b_msg", [n_h],
                                              initializer=tf.constant_initializer(0.0)))
             else:
                 w_fp.append(None)
                 b_fp.append(None)
                 w_msg.append(None)
                 b_msg.append(None)
-            wx_hid.append(tf.get_variable("wx_hid", [n_in_hid, n_h*4],
+            wx_hid.append(tf.compat.v1.get_variable("wx_hid", [n_in_hid, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            wh_hid.append(tf.get_variable("wh_hid", [n_h, n_h*4],
+            wh_hid.append(tf.compat.v1.get_variable("wh_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            b_hid.append(tf.get_variable("b_hid", [n_h*4],
+            b_hid.append(tf.compat.v1.get_variable("b_hid", [n_h*4],
                                          initializer=tf.constant_initializer(0.0)))
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     # loop over steps
@@ -294,6 +305,7 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
         out_m = [tf.expand_dims(h[i], axis=0) for i in range(n_agent)]
         out_m = tf.concat(out_m, axis=0) # Nxn_h
         # hidden phase
+
         for i in range(n_agent):
             ci = tf.expand_dims(c[i], axis=0)
             hi = tf.expand_dims(h[i], axis=0)
@@ -305,7 +317,13 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
             pi = []
             xi = [tf.slice(x, [i, 0], [1, n_s_ls[i]])]
             if n_m:
-                mi = tf.expand_dims(tf.reshape(tf.boolean_mask(out_m, masks[i]), [-1]), axis=0)
+                for j in range(n_h):
+                    N = n_h
+                    d = []
+                    loss_packet = []
+                    d = np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]])
+                    loss_packet.append(d)
+                mi = tf.expand_dims(tf.reshape(tf.multiply(out_m, loss_packet), [-1]), axis=0)
                 raw_pi = tf.boolean_mask(p, masks[i]) # n_n*n_a
                 raw_xi = tf.boolean_mask(x, masks[i])
                 # find the valid information based on each agent's s, a dim
@@ -348,6 +366,40 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
     n_s = xs.shape[-1]
     xs = tf.transpose(xs, perm=[1,0,2]) # TxNxn_s
     xs = batch_to_seq(xs)
+
+    distance = np.zeros((n_agent, n_agent))
+    for i in range(n_agent):
+        for j in range(n_agent):
+            if masks[i, j] == 1:
+                if abs(i - j) == 5:
+                    distance[i][j] = distance[j][i] = 150
+                if abs(i - j) == 1:
+                    distance[i][j] = distance[j][i] = 200
+            else:
+                distance[i][j] = 0
+    loss_distance = {0: 0,
+                     25: 0.96,
+                     50: 0.96,
+                     75: 0.93,
+                     100: 0.91,
+                     125: 0.88,
+                     150: 0.88,
+                     175: 0.83,
+                     200: 0.78,
+                     225: 0.75,
+                     250: 0.75,
+                     275: 0.69,
+                     300: 0.67,
+                     325: 0.65,
+                     350: 0.63,
+                     375: 0.63,
+                     400: 0.58,
+                     425: 0.5,
+                     450: 0.5}
+    loss_rate = np.zeros((n_agent, n_agent))
+    for i in range(n_agent):
+        for j in range(n_agent):
+            loss_rate[i, j] = loss_distance[distance[i, j]]
     # need dones to reset states
     dones = batch_to_seq(dones) # Tx1
     # create wts
@@ -359,21 +411,21 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
     wh_hid = []
     b_hid = []
     for i in range(n_agent):
-        n_m = np.sum(masks[i])
-        with tf.variable_scope(scope + ('_%d' % i)):
-            w_msg.append(tf.get_variable("w_msg", [n_h, n_h],
+        n_m = int(np.sum(masks[i]))
+        with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
+            w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h, n_h],
                                          initializer=init_method(init_scale, init_mode)))
-            b_msg.append(tf.get_variable("b_msg", [n_h],
+            b_msg.append(tf.compat.v1.get_variable("b_msg", [n_h],
                                          initializer=tf.constant_initializer(0.0)))
-            w_ob.append(tf.get_variable("w_ob", [n_s*(n_m+1), n_h],
+            w_ob.append(tf.compat.v1.get_variable("w_ob", [n_s*(n_m+1), n_h],
                                         initializer=init_method(init_scale, init_mode)))
-            b_ob.append(tf.get_variable("b_ob", [n_h],
+            b_ob.append(tf.compat.v1.get_variable("b_ob", [n_h],
                                         initializer=tf.constant_initializer(0.0)))
-            wx_hid.append(tf.get_variable("wx_hid", [n_h, n_h*4],
+            wx_hid.append(tf.compat.v1.get_variable("wx_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            wh_hid.append(tf.get_variable("wh_hid", [n_h, n_h*4],
+            wh_hid.append(tf.compat.v1.get_variable("wh_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            b_hid.append(tf.get_variable("b_hid", [n_h*4],
+            b_hid.append(tf.compat.v1.get_variable("b_hid", [n_h*4],
                                          initializer=tf.constant_initializer(0.0)))
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     # loop over steps
@@ -392,7 +444,14 @@ def lstm_ic3(xs, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEF
             ci = ci * (1-done)
             hi = hi * (1-done)
             # receive neighbor messages
-            mi = tf.reduce_mean(tf.boolean_mask(out_m, masks[i]), axis=0, keepdims=True)
+            loss_packet = []
+            for j in range(n_agent):
+                d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[(loss_rate[i, j]), (1 - loss_rate[i, j])]))
+                loss_packet.append(d.tolist())
+            loss_packet = np.array(loss_packet)
+            mi = tf.multiply(out_m, loss_packet)
+            mi = tf.boolean_mask(mi, masks[i])
+            mi = tf.reduce_mean(mi, axis=0, keepdims=True)
             # the state encoder in IC3 code is not consistent with that described in the paper.
             # Here we follow the impelmentation in the paper.
             xi = tf.expand_dims(tf.reshape(tf.boolean_mask(x, masks[i]), [-1]), axis=0)
@@ -442,24 +501,24 @@ def lstm_ic3_hetero(xs, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAU
             ns_dim.append(n_s_ls[j])
         n_m = len(ns_dim)
         ns_dim_ls.append(ns_dim)
-        with tf.variable_scope(scope + ('_%d' % i)):
+        with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
             if n_m:
-                w_msg.append(tf.get_variable("w_msg", [n_h, n_h],
+                w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h, n_h],
                                              initializer=init_method(init_scale, init_mode)))
-                b_msg.append(tf.get_variable("b_msg", [n_h],
+                b_msg.append(tf.compat.v1.get_variable("b_msg", [n_h],
                                              initializer=tf.constant_initializer(0.0)))
             else:
                 w_msg.append(None)
                 b_msg.append(None)
-            w_ob.append(tf.get_variable("w_ob", [n_s, n_h],
+            w_ob.append(tf.compat.v1.get_variable("w_ob", [n_s, n_h],
                                         initializer=init_method(init_scale, init_mode)))
-            b_ob.append(tf.get_variable("b_ob", [n_h],
+            b_ob.append(tf.compat.v1.get_variable("b_ob", [n_h],
                                         initializer=tf.constant_initializer(0.0)))
-            wx_hid.append(tf.get_variable("wx_hid", [n_h, n_h*4],
+            wx_hid.append(tf.compat.v1.get_variable("wx_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            wh_hid.append(tf.get_variable("wh_hid", [n_h, n_h*4],
+            wh_hid.append(tf.compat.v1.get_variable("wh_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            b_hid.append(tf.get_variable("b_hid", [n_h*4],
+            b_hid.append(tf.compat.v1.get_variable("b_hid", [n_h*4],
                                          initializer=tf.constant_initializer(0.0)))
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     # loop over steps
@@ -535,20 +594,20 @@ def lstm_dial(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     for i in range(n_agent):
         n_m = np.sum(masks[i])
         # n_in_hid = (n_m+1)*n_h
-        with tf.variable_scope(scope + ('_%d' % i)):
-            w_msg.append(tf.get_variable("w_msg", [n_h*n_m, n_h],
+        with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
+            w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h*n_m, n_h],
                                          initializer=init_method(init_scale, init_mode)))
-            b_msg.append(tf.get_variable("b_msg", [n_h],
+            b_msg.append(tf.compat.v1.get_variable("b_msg", [n_h],
                                          initializer=tf.constant_initializer(0.0)))
-            w_ob.append(tf.get_variable("w_ob", [n_s*(n_m+1), n_h],
+            w_ob.append(tf.compat.v1.get_variable("w_ob", [n_s*(n_m+1), n_h],
                                         initializer=init_method(init_scale, init_mode)))
-            b_ob.append(tf.get_variable("b_ob", [n_h],
+            b_ob.append(tf.compat.v1.get_variable("b_ob", [n_h],
                                         initializer=tf.constant_initializer(0.0)))
-            wx_hid.append(tf.get_variable("wx_hid", [n_h, n_h*4],
+            wx_hid.append(tf.compat.v1.get_variable("wx_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            wh_hid.append(tf.get_variable("wh_hid", [n_h, n_h*4],
+            wh_hid.append(tf.compat.v1.get_variable("wh_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            b_hid.append(tf.get_variable("b_hid", [n_h*4],
+            b_hid.append(tf.compat.v1.get_variable("b_hid", [n_h*4],
                                          initializer=tf.constant_initializer(0.0)))
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     # loop over steps
@@ -599,7 +658,7 @@ def lstm_dial(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mod
     return xs, s
 
 
-def lstm_dial_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_dial_hetero(xs, ps, dones, masks, loss, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                      init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -626,24 +685,24 @@ def lstm_dial_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
             ns_dim.append(n_s_ls[j])
         n_m = len(ns_dim)
         ns_dim_ls.append(ns_dim)
-        with tf.variable_scope(scope + ('_%d' % i)):
+        with tf.compat.v1.variable_scope(scope + ('_%d' % i)):
             if n_m:
-                w_msg.append(tf.get_variable("w_msg", [n_h*n_m, n_h],
+                w_msg.append(tf.compat.v1.get_variable("w_msg", [n_h*n_m, n_h],
                                              initializer=init_method(init_scale, init_mode)))
-                b_msg.append(tf.get_variable("b_msg", [n_h],
+                b_msg.append(tf.compat.v1.get_variable("b_msg", [n_h],
                                              initializer=tf.constant_initializer(0.0)))
             else:
                 w_msg.append(None)
                 b_msg.append(None)
-            w_ob.append(tf.get_variable("w_ob", [n_s, n_h],
+            w_ob.append(tf.compat.v1.get_variable("w_ob", [n_s, n_h],
                                         initializer=init_method(init_scale, init_mode)))
-            b_ob.append(tf.get_variable("b_ob", [n_h],
+            b_ob.append(tf.compat.v1.get_variable("b_ob", [n_h],
                                         initializer=tf.constant_initializer(0.0)))
-            wx_hid.append(tf.get_variable("wx_hid", [n_h, n_h*4],
+            wx_hid.append(tf.compat.v1.get_variable("wx_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            wh_hid.append(tf.get_variable("wh_hid", [n_h, n_h*4],
+            wh_hid.append(tf.compat.v1.get_variable("wh_hid", [n_h, n_h*4],
                                           initializer=init_method(init_scale, init_mode)))
-            b_hid.append(tf.get_variable("b_hid", [n_h*4],
+            b_hid.append(tf.compat.v1.get_variable("b_hid", [n_h*4],
                                          initializer=tf.constant_initializer(0.0)))
     c, h = tf.split(axis=1, num_or_size_splits=2, value=s)
     # loop over steps

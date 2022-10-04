@@ -6,6 +6,7 @@ import time
 import os
 import pandas as pd
 import subprocess
+import traci
 
 
 def check_dir(cur_dir):
@@ -15,7 +16,8 @@ def check_dir(cur_dir):
 
 
 def copy_file(src_dir, tar_dir):
-    cmd = 'cp %s %s' % (src_dir, tar_dir)
+    # cmd = 'copy %s %s' % (src_dir, tar_dir)
+    cmd ='cp %s %s' % (src_dir, tar_dir)
     subprocess.check_call(cmd, shell=True)
 
 
@@ -98,7 +100,7 @@ class Counter:
 
 
 class Trainer():
-    def __init__(self, env, model, global_counter, summary_writer, output_path=None):
+    def __init__(self, env, model, global_counter, summary_writer, output_path=None, gui=False):
         self.cur_step = 0
         self.global_counter = global_counter
         self.env = env
@@ -112,6 +114,7 @@ class Trainer():
         self.output_path = output_path
         self.env.train_mode = True
         self._init_summary()
+        self.gui = gui
 
     def _init_summary(self):
         self.train_reward = tf.compat.v1.placeholder(tf.float32, [])
@@ -184,7 +187,7 @@ class Trainer():
                 logging.info('''Training: global step %d, episode step %d,
                                    ob: %s, a: %s, pi: %s, r: %.2f, train r: %.2f, done: %r''' %
                              (global_step, self.cur_step,
-                              str(ob), str(action), str(policy), global_reward, np.mean(reward), done))
+                              str(ob), str(action), str(policy), global_reward, np.sum(reward), done))
             # terminal check must be inside batch loop for CACC env
             if done:
                 break
@@ -218,7 +221,7 @@ class Trainer():
             if done:
                 break
             ob = next_ob
-        mean_reward = np.mean(np.array(rewards))
+        mean_reward = np.sum(np.array(rewards))
         std_reward = np.std(np.array(rewards))
         return mean_reward, std_reward
 
@@ -241,7 +244,7 @@ class Trainer():
                     self.env.terminate()
                     break
             rewards = np.array(self.episode_rewards)
-            mean_reward = np.mean(rewards)
+            mean_reward = np.sum(rewards)
             std_reward = np.std(rewards)
             # NOTE: for CACC we have to run another testing episode after each
             # training episode since the reward and policy settings are different!
@@ -264,8 +267,8 @@ class Tester(Trainer):
         logging.info('Testing: total test num: %d' % self.test_num)
 
     def _init_summary(self):
-        self.reward = tf.placeholder(tf.float32, [])
-        self.summary = tf.summary.scalar('test_reward', self.reward)
+        self.reward = tf.compat.v1.placeholder(tf.float32, [])
+        self.summary = tf.compat.v1.summary.scalar('test_reward', self.reward)
 
     def run_offline(self):
         # enable traffic measurments for offline test
@@ -279,7 +282,7 @@ class Tester(Trainer):
             self.env.terminate()
             time.sleep(2)
             self.env.collect_tripinfo()
-        avg_reward = np.mean(np.array(rewards))
+        avg_reward = np.sum(np.array(rewards))
         logging.info('Offline testing: avg R: %.2f' % avg_reward)
         self.env.output_data()
 
@@ -299,7 +302,7 @@ class Tester(Trainer):
                            'test_id': test_ind,
                            'reward': cur_reward}
                     self.data.append(log)
-                avg_reward = np.mean(np.array(rewards))
+                avg_reward = np.sum(np.array(rewards))
                 self._add_summary(avg_reward, global_step)
                 logging.info('Testing: global step %d, avg R: %.2f' %
                              (global_step, avg_reward))

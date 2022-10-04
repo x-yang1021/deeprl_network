@@ -10,11 +10,13 @@ regional reinforcement learning." American Control Conference (ACC), 2016. IEEE,
 """
 import numpy as np
 import os
+import sumolib
 
 MAX_CAR_NUM = 30
 SPEED_LIMIT_ST = 20
-SPEED_LIMIT_AV = 11
+SPEED_LIMIT_AV = 20
 L0 = 200
+L1 = 150
 L0_end = 75
 N = 5
 
@@ -28,7 +30,7 @@ def output_nodes(node):
     str_nodes = '<nodes>\n'
     # traffic light nodes
     ind = 1
-    for dy in np.arange(0, L0 * 5, L0):
+    for dy in np.arange(0, L1 * 5, L1):
         for dx in np.arange(0, L0 * 5, L0):
             str_nodes += node % ('nt' + str(ind), dx, dy, 'traffic_light')
             ind += 1
@@ -37,23 +39,24 @@ def output_nodes(node):
     for dx in np.arange(0, L0 * 5, L0):
         str_nodes += node % ('np' + str(ind), dx, -L0_end, 'priority')
         ind += 1
-    for dy in np.arange(0, L0 * 5, L0):
+    for dy in np.arange(0, L1 * 5, L1):
         str_nodes += node % ('np' + str(ind), L0 * 4 + L0_end, dy, 'priority')
         ind += 1
     for dx in np.arange(L0 * 4, -1, -L0):
-        str_nodes += node % ('np' + str(ind), dx, L0 * 4 + L0_end, 'priority')
+        str_nodes += node % ('np' + str(ind), dx, L1 * 4 + L0_end, 'priority')
         ind += 1
-    for dy in np.arange(L0 * 4, -1, -L0):
+    for dy in np.arange(L1 * 4, -1, -L1):
         str_nodes += node % ('np' + str(ind), -L0_end, dy, 'priority')
         ind += 1
     str_nodes += '</nodes>\n'
     return str_nodes
+    print(str_nodes)
 
 
 def output_road_types():
     str_types = '<types>\n'
-    str_types += '  <type id="a" priority="2" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_ST
-    str_types += '  <type id="b" priority="1" numLanes="1" speed="%.2f"/>\n' % SPEED_LIMIT_AV
+    str_types += '  <type id="a" priority="1" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_ST
+    str_types += '  <type id="b" priority="1" numLanes="2" speed="%.2f"/>\n' % SPEED_LIMIT_AV
     str_types += '</types>\n'
     return str_types
 
@@ -111,11 +114,20 @@ def get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node):
     str_cons += get_con_str(con, n_node, cur_node, s_node, 0, 0)
     str_cons += get_con_str(con, w_node, cur_node, e_node, 0, 0)
     str_cons += get_con_str(con, e_node, cur_node, w_node, 0, 0)
+    str_cons += get_con_str(con, s_node, cur_node, n_node, 1, 1)
+    str_cons += get_con_str(con, n_node, cur_node, s_node, 1, 1)
+    str_cons += get_con_str(con, w_node, cur_node, e_node, 1, 1)
+    str_cons += get_con_str(con, e_node, cur_node, w_node, 1, 1)
+
     # left-turn
-    str_cons += get_con_str(con, s_node, cur_node, w_node, 0, 1)
-    str_cons += get_con_str(con, n_node, cur_node, e_node, 0, 1)
-    str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 0)
-    str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 0)
+    str_cons += get_con_str(con, s_node, cur_node, w_node, 1, 1)
+    str_cons += get_con_str(con, n_node, cur_node, e_node, 1, 1)
+    str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 1)
+    str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 1)
+    # str_cons += get_con_str(con, s_node, cur_node, w_node, 1, 0)
+    # str_cons += get_con_str(con, n_node, cur_node, e_node, 1, 0)
+    # str_cons += get_con_str(con, w_node, cur_node, n_node, 1, 0)
+    # str_cons += get_con_str(con, e_node, cur_node, s_node, 1, 0)
     # right-turn
     str_cons += get_con_str(con, s_node, cur_node, e_node, 0, 0)
     str_cons += get_con_str(con, n_node, cur_node, w_node, 0, 0)
@@ -177,7 +189,6 @@ def output_connections(con):
         e_node = 'nt' + str(i + 1)
         cur_node = 'nt' + str(i)
         str_cons += get_con_str_set(con, cur_node, n_node, s_node, w_node, e_node)
-
     str_cons += '</connections>\n'
     return str_cons
 
@@ -208,6 +219,7 @@ def get_external_od(out_edges, dest=True):
         else:
             edge = '%s_%s' % (out_node, in_node)
         cur_dest.append(edge)
+
     return cur_dest
 
 
@@ -265,7 +277,7 @@ def init_routes(density):
             k += 1
     return output
 
-def output_flows(peak_flow1, peak_flow2, density, seed=None):
+def output_flows(peak_flow1, peak_flow2, density, seed=None): #1000 2000 0.2
     '''
     flow1: x11, x12, x13, x14, x15 -> x1, x2, x3, x4, x5
     flow2: x16, x17, x18, x19, x20 -> x6, x7, x8, x9, x10
@@ -322,7 +334,7 @@ def output_flows(peak_flow1, peak_flow2, density, seed=None):
                     cur_name = name + '_' + str(k)
                     str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i - id2])
                     k += 1
-    str_flows += '</routes>\n'
+    str_flows +='</routes>\n'
     return str_flows
 
 
@@ -345,7 +357,7 @@ def output_config(thread=None):
     str_config = '<configuration>\n  <input>\n'
     str_config += '    <net-file value="exp.net.xml"/>\n'
     str_config += '    <route-files value="%s"/>\n' % out_file
-    str_config += '    <additional-files value="exp.add.xml"/>\n'
+    # str_config += '    <additional-files value="exp.add.xml"/>\n'
     str_config += '  </input>\n  <time>\n'
     str_config += '    <begin value="0"/>\n    <end value="3600"/>\n'
     str_config += '  </time>\n</configuration>\n'
@@ -368,9 +380,9 @@ def output_ild(ild):
         node1 = 'nt' + str(i)
         node2 = 'np' + str(j)
         str_adds += get_ild_str(node2, node1, ild)
-        if k < 10:
+        #if k < 10:
             # streets
-            str_adds += get_ild_str(node2, node1, ild, lane_i=1)
+        #str_adds += get_ild_str(node2, node1, ild, lane_i=1)
     # streets
     for i in range(1, 25, 5):
         for j in range(4):
@@ -387,6 +399,8 @@ def output_ild(ild):
             node2 = 'nt' + str(i + j + 5)
             str_adds += get_ild_str(node1, node2, ild)
             str_adds += get_ild_str(node2, node1, ild)
+            str_adds += get_ild_str(node1, node2, ild, lane_i=1)
+            str_adds += get_ild_str(node2, node1, ild, lane_i=1)
     str_adds += '</additional>\n'
     return str_adds
 
@@ -394,9 +408,12 @@ def output_ild(ild):
 def output_tls(tls, phase):
     str_adds = '<additional>\n'
     # all crosses have 3 phases
-    three_phases = ['GGgrrrGGgrrr', 'yyyrrryyyrrr',
-                    'rrrGrGrrrGrG', 'rrrGryrrrGry',
-                    'rrrGGrrrrGGr', 'rrryyrrrryyr']
+    three_phases = ['GGGgrrrrGGGgrrrr', 'GGGyrrrrGGGyrrrr',
+                    'GGGrrrrrGGGrrrrr', 'GyyGrrrrGyyGrrrr',
+                    'GrrGrrrrGrrGrrrr', 'yrryrrrryrryrrrr',
+                    'rrrrGGGgrrrrGGGg', 'rrrrGGGyrrrrGGGy',
+                    'rrrrGGGrrrrrGGGr', 'rrrrGyyrrrrrGyyr',
+                    'rrrrGrrGrrrrGrrG']
     phase_duration = [30, 3]
     for i in range(1, 26):
         node = 'nt' + str(i)
@@ -442,12 +459,13 @@ def main():
     # os.system('jtrrouter -n exp.net.xml -r exp.raw.rou.xml -o exp.rou.xml')
 
     # add.xml file
-    ild = '  <laneAreaDetector file="ild.out" freq="1" id="%s_%d" lane="%s_%d" pos="-50" endPos="-1"/>\n'
-    # ild_in = '  <inductionLoop file="ild_out.out" freq="15" id="ild_in:%s" lane="%s_0" pos="10"/>\n'
-    write_file('./exp.add.xml', output_ild(ild))
+    # ild = '  <laneAreaDetector file="ild.out" freq="1" id="%s_%d" lane="%s_%d" pos="-50" endPos="-1"/>\n'
+    # # ild_in = '  <inductionLoop file="ild_out.out" freq="15" id="ild_in:%s" lane="%s_0" pos="10"/>\n'
+    # write_file('./exp.add.xml', output_ild(ild))
 
     # config file
     write_file('./exp.sumocfg', output_config())
+
 
 if __name__ == '__main__':
     main()

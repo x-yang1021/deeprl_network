@@ -12,18 +12,19 @@ import seaborn as sns
 import time
 from envs.atsc_env import PhaseMap, PhaseSet, TrafficSimulator
 from envs.large_grid_data.build_file import gen_rou_file
+import traci
 
 sns.set_color_codes()
 
 
 STATE_NAMES = ['wave']
-PHASE_NUM = 5
+PHASE_NUM = 6
 
 
 class LargeGridPhase(PhaseMap):
     def __init__(self):
-        phases = ['GGgrrrGGgrrr', 'rrrGrGrrrGrG', 'rrrGGrrrrGGr',
-                  'rrrGGGrrrrrr', 'rrrrrrrrrGGG']
+        phases = ['GGGgrrrrGGGgrrrr', 'GrrGrrrrGrrGrrrr', 'GGGrrrrrGGGrrrrr',
+                  'rrrrGGGgrrrrGGGg', 'rrrrGrrGrrrrGrrG', 'rrrrGGGrrrrrGGGr']
         self.phases = {PHASE_NUM: PhaseSet(phases)}
 
 
@@ -102,17 +103,57 @@ class LargeGridEnv(TrafficSimulator):
         row2 = np.hstack([block2, block1, block0, block1, block2])
         row3 = np.hstack([block3, block2, block1, block0, block1])
         row4 = np.hstack([block4, block3, block2, block1, block0])
-        self.distance_mask = np.vstack([row0, row1, row2, row3, row4]) 
+        self.distance_mask = np.vstack([row0, row1, row2, row3, row4])
+
 
     def _init_map(self):
         self.node_names = ['nt%d' % i for i in range(1, 26)]
         self.n_node = 25
         self._init_neighbor_map()
+        self._init_distance_loss()
         # for spatial discount
         self._init_distance_map()
         self.max_distance = 8
         self.phase_map = LargeGridPhase()
         self.state_names = STATE_NAMES
+
+    def _init_distance_loss(self):
+        distance = np.zeros((len(self.node_names),len(self.node_names)))
+
+        for i in range(len(self.node_names)):
+            for j in range(len(self.node_names)):
+                if self.neighbor_mask[i, j] == 1:
+                    if abs(i - j) == 5:
+                        distance[i][j] = distance[j][i] = 150
+                    if abs(i - j) == 1:
+                        distance[i][j] = distance[j][i] = 200
+                else:
+                    distance[i][j] = 0
+        loss_distance = {0: 0,
+                     25: 0.96,
+                     50: 0.96,
+                     75: 0.93,
+                     100: 0.91,
+                     125: 0.88,
+                     150: 0.88,
+                     175: 0.83,
+                     200: 0.78,
+                     225: 0.75,
+                     250: 0.75,
+                     275: 0.69,
+                     300: 0.67,
+                     325: 0.65,
+                     350: 0.63,
+                     375: 0.63,
+                     400: 0.58,
+                     425: 0.5,
+                     450: 0.5}
+        self.loss_rate = np.zeros((len(self.node_names),len(self.node_names)))
+
+        for i in range(len(self.node_names)):
+            for j in range(len(self.node_names)):
+                self.loss_rate[i, j] = loss_distance[distance[i, j]]
+        return self.loss_rate
 
     def _init_sim_config(self, seed):
         return gen_rou_file(self.data_path,
@@ -161,5 +202,5 @@ if __name__ == '__main__':
         time.sleep(2)
         env.collect_tripinfo()
     env.plot_stat(np.array(rewards))
-    logging.info('avg reward: %.2f' % np.mean(rewards))
+    logging.info('avg reward: %.2f' % np.sum(rewards))
     env.output_data()

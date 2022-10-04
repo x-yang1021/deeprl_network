@@ -10,11 +10,34 @@ from sumolib import checkBinary
 import time
 import traci
 import xml.etree.cElementTree as ET
+import networkx as nx
 
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8813
 SEC_IN_MS = 1000
 VEH_LEN_M = 7.5 # effective vehicle length
 QUEUE_MAX = 10
+
+
+node_names = []
+
+node_names += ['nt%d' % i for i in range(1, 26)]
+
+G = nx.Graph()
+
+G.add_nodes_from(node_names)
+
+G.add_edges_from([
+    ('nt1','nt6'),('nt6','nt11'),('nt11','nt16'),('nt16','nt21'),
+    ('nt1','nt2'),('nt6','nt7'),('nt11','nt12'),('nt16','nt17'),('nt22','nt21'),
+    ('nt7','nt2'),('nt12','nt7'),('nt17','nt12'),('nt22','nt17'),
+    ('nt3','nt2'),('nt8','nt7'),('nt13','nt12'),('nt18','nt17'),('nt22','nt23'),
+    ('nt3','nt8'),('nt8','nt13'),('nt13','nt18'),('nt18','nt23'),
+    ('nt3','nt4'),('nt8','nt9'),('nt13','nt14'),('nt18','nt19'),('nt24','nt23'),
+    ('nt9','nt4'),('nt14','nt9'),('nt19','nt14'),('nt24','nt19'),
+    ('nt5','nt4'),('nt10','nt9'),('nt15','nt14'),('nt20','nt19'),('nt24','nt25'),
+    ('nt5','nt10'),('nt10','nt15'),('nt15','nt20'),('nt20','nt25')
+               ])
+centrality = nx.closeness_centrality(G)
 
 
 class PhaseSet:
@@ -279,7 +302,7 @@ class TrafficSimulator:
         # for local and neighbor coop level
         self.n_agent = self.n_node
         # to simplify the sim, we assume all agents have the max action dim,
-        # with tailing zeros during run time
+        # with trailing zeros during run time
         self.n_a_ls = []
         for node_name in self.node_names:
             node = self.nodes[node_name]
@@ -392,7 +415,7 @@ class TrafficSimulator:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
                         cur_queue = min(cur_queue, QUEUE_MAX)
                     else:
-                        cur_queue = self.sim.lanearea.getLastStepHaltingNumber(ild)
+                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     max_pos = 0
@@ -400,15 +423,15 @@ class TrafficSimulator:
                     if self.name == 'atsc_real_net':
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                     else:
-                        cur_cars = self.sim.lanearea.getLastStepVehicleIDs(ild)
+                        cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                     for vid in cur_cars:
                         car_pos = self.sim.vehicle.getLanePosition(vid)
                         if car_pos > max_pos:
                             max_pos = car_pos
                             car_wait = self.sim.vehicle.getWaitingTime(vid)
                     waits.append(car_wait)
-            queue = np.sum(np.array(queues)) if len(queues) else 0
-            wait = np.sum(np.array(waits)) if len(waits) else 0
+            queue = centrality[node_name] * np.sum(np.array(queues)) if len(queues) else 0
+            wait = centrality[node_name] * np.sum(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
             elif self.obj == 'wait':
@@ -432,7 +455,7 @@ class TrafficSimulator:
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
                         else:
-                            cur_wave = self.sim.lanearea.getLastStepVehicleNumber(ild)
+                            cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
@@ -443,7 +466,7 @@ class TrafficSimulator:
                         if self.name == 'atsc_real_net':
                             cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                         else:
-                            cur_cars = self.sim.lanearea.getLastStepVehicleIDs(ild)
+                            cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                         for vid in cur_cars:
                             car_pos = self.sim.vehicle.getLanePosition(vid)
                             if car_pos > max_pos:

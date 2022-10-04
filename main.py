@@ -16,12 +16,13 @@ from utils import (Counter, Trainer, Tester, Evaluator,
                    check_dir, copy_file, find_file,
                    init_dir, init_log, init_test_flag,
                    plot_evaluation, plot_train)
+import traci
 
 tf.compat.v1.disable_eager_execution()
 
 def parse_args():
-    default_base_dir = '/Users/tchu/Documents/rl_test/deeprl_dist/ia2c_grid_0.9'
-    default_config_dir = './config/config_ia2c_grid.ini'
+    default_base_dir = '/Users/yang/Documents/GitHub/deeprl_network/test'
+    default_config_dir = '/Users/yang/Documents/GitHub/deeprl_network/config/config_ma2c_cnet_grid.ini'
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-dir', type=str, required=False,
                         default=default_base_dir, help="experiment base dir")
@@ -29,6 +30,7 @@ def parse_args():
     sp = subparsers.add_parser('train', help='train a single agent under base dir')
     sp.add_argument('--config-dir', type=str, required=False,
                     default=default_config_dir, help="experiment config path")
+    # sp.add_argument('--demo', action='store_true', help="shows SUMO gui")
     sp = subparsers.add_parser('evaluate', help="evaluate and compare agents under base dir")
     sp.add_argument('--evaluation-seeds', type=str, required=False,
                     default=','.join([str(i) for i in range(2000, 2500, 10)]),
@@ -54,17 +56,17 @@ def init_env(config, port=0):
 
 def init_agent(env, config, total_step, seed):
     if env.agent == 'ia2c':
-        return IA2C(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
+        return IA2C(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
                     total_step, config, seed=seed)
     elif env.agent == 'ia2c_fp':
         return IA2C_FP(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
                        total_step, config, seed=seed)
     elif env.agent == 'ma2c_nc':
-        return MA2C_NC(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
+        return MA2C_NC(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
                        total_step, config, seed=seed)
     elif env.agent == 'ma2c_ic3':
         # this is actually CommNet
-        return MA2C_IC3(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
+        return MA2C_IC3(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
                         total_step, config, seed=seed)
     elif env.agent == 'ma2c_cu':
         return IA2C_CU(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
@@ -81,6 +83,7 @@ def train(args):
     dirs = init_dir(base_dir)
     init_log(dirs['log'])
     config_dir = args.config_dir
+    print(config_dir, dirs['data'])
     copy_file(config_dir, dirs['data'])
     config = configparser.ConfigParser()
     config.read(config_dir)
