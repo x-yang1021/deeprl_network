@@ -185,7 +185,7 @@ class TrafficSimulator:
         trip_data = pd.DataFrame(self.trip_data)
         trip_data.to_csv(self.output_path + ('%s_%s_trip.csv' % (self.name, self.agent)))
 
-    def reset(self, gui=False, test_ind=0):
+    def reset(self, gui=True, test_ind=0):
         # have to terminate previous sim before calling reset
         self._reset_state()
         if self.train_mode:
@@ -207,6 +207,12 @@ class TrafficSimulator:
         rest_interval_sec = self.control_interval_sec - self.yellow_interval_sec
         self._set_phase(action, 'green', rest_interval_sec)
         self._simulate(rest_interval_sec)
+        counter = 0
+        if 'f1_1.1' in self.sim.vehicle.getIDList() and counter < 100:
+            self.sim.vehicle.setStop(vehID='f1_1.1', edgeID='nt23_nt18', pos=70, duration=10)
+            counter +=1
+        else:
+            pass
         state = self._get_state()
         reward = self._measure_reward_step()
         done = False
