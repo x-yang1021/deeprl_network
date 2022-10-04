@@ -17,10 +17,10 @@ class IA2C:
     The basic IA2C implementation with decentralized actor and centralized critic,
     limited to neighborhood area only.
     """
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ia2c'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, naction, action, reward, value, done):
@@ -81,7 +81,7 @@ class IA2C:
     def save(self, model_dir, global_step):
         self.saver.save(self.sess, model_dir + 'checkpoint', global_step=global_step)
 
-    def _init_algo(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+    def _init_algo(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                    total_step, seed, model_config):
         # init params
         self.n_s_ls = n_s_ls
@@ -96,6 +96,7 @@ class IA2C:
             self.n_s = max(self.n_s_ls)
             self.n_a = max(self.n_a_ls)
         self.neighbor_mask = neighbor_mask
+        self.loss_rate = loss_rate
         self.n_agent = len(self.neighbor_mask)
         self.reward_clip = model_config.getfloat('reward_clip')
         self.reward_norm = model_config.getfloat('reward_norm')
@@ -118,7 +119,7 @@ class IA2C:
     def _init_policy(self):
         policy = []
         for i in range(self.n_agent):
-            n_n = np.sum(self.neighbor_mask[i])
+            n_n = int(np.sum(self.neighbor_mask[i]))
             if self.identical_agent:
                 policy.append(LstmPolicy(self.n_s_ls[i], self.n_a_ls[i], n_n, self.n_step,
                                          n_fc=self.n_fc, n_lstm=self.n_lstm, name='%d' % i))

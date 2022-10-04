@@ -18,34 +18,34 @@ class Policy:
         raise NotImplementedError()
 
     def prepare_loss(self, v_coef, e_coef, max_grad_norm, alpha, epsilon):
-        self.A = tf.placeholder(tf.int32, [self.n_step])
-        self.ADV = tf.placeholder(tf.float32, [self.n_step])
-        self.R = tf.placeholder(tf.float32, [self.n_step])
+        self.A = tf.compat.v1.placeholder(tf.int32, [self.n_step])
+        self.ADV = tf.compat.v1.placeholder(tf.float32, [self.n_step])
+        self.R = tf.compat.v1.placeholder(tf.float32, [self.n_step])
         A_sparse = tf.one_hot(self.A, self.n_a)
-        log_pi = tf.log(tf.clip_by_value(self.pi, 1e-10, 1.0))
+        log_pi = tf.math.log(tf.clip_by_value(self.pi, 1e-10, 1.0))
         entropy = -tf.reduce_sum(self.pi * log_pi, axis=1)
         entropy_loss = -tf.reduce_mean(entropy) * e_coef
         policy_loss = -tf.reduce_mean(tf.reduce_sum(log_pi * A_sparse, axis=1) * self.ADV)
         value_loss = tf.reduce_mean(tf.square(self.R - self.v)) * 0.5 * v_coef
         self.loss = policy_loss + value_loss + entropy_loss
 
-        wts = tf.trainable_variables(scope=self.name)
+        wts = tf.compat.v1.trainable_variables(scope=self.name)
         grads = tf.gradients(self.loss, wts)
         if max_grad_norm > 0:
             grads, self.grad_norm = tf.clip_by_global_norm(grads, max_grad_norm)
-        self.lr = tf.placeholder(tf.float32, [])
-        self.optimizer = tf.train.RMSPropOptimizer(learning_rate=self.lr, decay=alpha,
+        self.lr = tf.compat.v1.placeholder(tf.float32, [])
+        self.optimizer = tf.compat.v1.train.RMSPropOptimizer(learning_rate=self.lr, decay=alpha,
                                                    epsilon=epsilon)
         self._train = self.optimizer.apply_gradients(list(zip(grads, wts)))
         # monitor training
         summaries = []
-        summaries.append(tf.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
-        summaries.append(tf.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
-        summaries.append(tf.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
-        summaries.append(tf.summary.scalar('train/%s_lr' % self.name, self.lr))
-        summaries.append(tf.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
-        self.summary = tf.summary.merge(summaries)
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_entropy_loss' % self.name, entropy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_policy_loss' % self.name, policy_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_value_loss' % self.name, value_loss))
+        summaries.append(tf.compat.v1.summary.scalar('loss/%s_total_loss' % self.name, self.loss))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_lr' % self.name, self.lr))
+        summaries.append(tf.compat.v1.summary.scalar('train/%s_gradnorm' % self.name, self.grad_norm))
+        self.summary = tf.compat.v1.summary.merge(summaries)
 
     def _build_actor_head(self, h, n_a=None, agent_name=None):
         name = 'pi'
@@ -86,17 +86,17 @@ class LstmPolicy(Policy):
         self.n_lstm = n_lstm
         self.n_fc = n_fc
         self.n_n = n_n
-        self.ob_fw = tf.placeholder(tf.float32, [1, n_s]) # forward 1-step
-        self.done_fw = tf.placeholder(tf.float32, [1])
-        self.ob_bw = tf.placeholder(tf.float32, [n_step, n_s]) # backward n-step
+        self.ob_fw = tf.compat.v1.placeholder(tf.float32, [1, n_s]) # forward 1-step
+        self.done_fw = tf.compat.v1.placeholder(tf.float32, [1])
+        self.ob_bw = tf.compat.v1.placeholder(tf.float32, [n_step, n_s]) # backward n-step
         if self.n_n:
-            self.naction_fw = tf.placeholder(tf.int32, [1, n_n])
-            self.naction_bw = tf.placeholder(tf.int32, [n_step, n_n])
-        self.done_bw = tf.placeholder(tf.float32, [n_step])
-        self.states = tf.placeholder(tf.float32, [n_lstm * 2])
-        with tf.variable_scope(self.name):
+            self.naction_fw = tf.compat.v1.placeholder(tf.int32, [1, n_n])
+            self.naction_bw = tf.compat.v1.placeholder(tf.int32, [n_step, n_n])
+        self.done_bw = tf.compat.v1.placeholder(tf.float32, [n_step])
+        self.states = tf.compat.v1.placeholder(tf.float32, [n_lstm * 2])
+        with tf.compat.v1.variable_scope(self.name):
             self.pi_fw, self.v_fw, self.new_states = self._build_net('forward')
-        with tf.variable_scope(self.name, reuse=True):
+        with tf.compat.v1.variable_scope(self.name, reuse=True):
             self.pi, self.v, _ = self._build_net('backward')
         self._reset()
 

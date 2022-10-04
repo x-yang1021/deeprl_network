@@ -199,7 +199,7 @@ class Trainer():
             R = self._get_value(ob, done, action)
         return ob, done, R
 
-    def perform(self, test_ind, gui=False):
+    def perform(self, test_ind, gui=True):
         ob = self.env.reset(gui=gui, test_ind=test_ind)
         rewards = []
         # note this done is pre-decision to reset LSTM states!
