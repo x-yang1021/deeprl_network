@@ -190,10 +190,10 @@ class IA2C_FP(IA2C):
 
 
 class MA2C_NC(IA2C):
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ma2c_nc'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, p, action, reward, value, done):
