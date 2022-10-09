@@ -231,9 +231,21 @@ class TrafficSimulator:
         return state, reward, done, global_reward
 
     def accident(self):
-        accident_veh = np.random.choice(self.sim.vehicle.getIDList())
-        accident_veh_edge = self.sim.vehicle.getRoadID(accident_veh)
-        self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_veh_edge)
+        i = 0
+        while i < 10:
+            accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+            veh_edge = self.sim.vehicle.getRoadID(accident_veh)
+            veh_route = self.sim.vehicle.getRoute(accident_veh)
+            if veh_route.index(veh_edge) < len(veh_route):
+                break
+            accident_edge = veh_route[veh_route.index(veh_edge) + 1]
+            accident_lane = list(accident_edge)
+            accident_lane.append('_')
+            accident_lane.append('0')
+            accident_lane = "".join(accident_lane)
+            accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
+            self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_edge, pos=accident_position)
+
 
     def terminate(self):
         self.sim.close()
