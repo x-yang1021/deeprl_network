@@ -166,7 +166,9 @@ class Trainer():
     def explore(self, prev_ob, prev_done):
         ob = prev_ob
         done = prev_done
-        for _ in range(self.n_step):
+        num_accident = np.random.poisson(4,self.n_step)
+        accident_step = np.random_sample(self.n_step,num_accident)
+        for step in range(self.n_step):
             # pre-decision
             policy, action = self._get_policy(ob, done)
             # post-decision
@@ -177,6 +179,10 @@ class Trainer():
             self.episode_rewards.append(global_reward)
             global_step = self.global_counter.next()
             self.cur_step += 1
+            if step in accident_step:
+                accident_veh = np.random.choice(traci.vehicle.getIDList())
+                accident_veh_edge = traci.vehicle.getRoadID(accident_veh)
+                traci.vehicle.setStop(vehID=accident_veh, edgeID=accident_veh_edge)
             # collect experience
             if self.agent.startswith('ma2c'):
                 self.model.add_transition(ob, self.ps, action, reward, value, done)
