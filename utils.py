@@ -7,6 +7,7 @@ import os
 import pandas as pd
 import subprocess
 import traci
+from scipy import stats
 
 
 def check_dir(cur_dir):
@@ -167,7 +168,7 @@ class Trainer():
         ob = prev_ob
         done = prev_done
         num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=self.n_step))
-        accident_step = np.random_sample(self.n_step,num_accident)
+        accident_step = np.random.choice(self.n_step,num_accident)
         for step in range(self.n_step):
             # pre-decision
             policy, action = self._get_policy(ob, done)
