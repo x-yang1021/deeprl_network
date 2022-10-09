@@ -230,6 +230,11 @@ class TrafficSimulator:
             reward = global_reward
         return state, reward, done, global_reward
 
+    def accident(self):
+        accident_veh = np.random.choice(traci.vehicle.getIDList())
+        accident_veh_edge = traci.vehicle.getRoadID(accident_veh)
+        traci.vehicle.setStop(vehID=accident_veh, edgeID=accident_veh_edge)
+
     def terminate(self):
         self.sim.close()
 
