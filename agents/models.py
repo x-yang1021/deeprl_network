@@ -238,7 +238,7 @@ class MA2C_NC(IA2C):
     def _init_policy(self):
         if self.identical_agent:
             return NCMultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
-                                      self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm)
+                                      self.neighbor_mask, self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm)
         else:
             return NCMultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
                                       self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm,

@@ -194,7 +194,6 @@ def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCAL
             # receive neighbor messages
             loss_packet = []
             for j in range(n_agent):
-                print('test', loss_rate[i,j])
                 d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
                 loss_packet.append(d.tolist())
             loss_packet = np.array(loss_packet)

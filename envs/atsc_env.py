@@ -421,7 +421,8 @@ class TrafficSimulator:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
                         cur_queue = min(cur_queue, QUEUE_MAX)
                     else:
-                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
+                        queue_length = self.sim.lane.getLastStepHaltingNumber(ild)
+                        cur_queue = 1 if queue_length >= (int(self.sim.lane.getLength(ild)/7)-1) else 0
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     max_pos = 0
@@ -443,7 +444,7 @@ class TrafficSimulator:
             elif self.obj == 'wait':
                 reward = - wait
             else:
-                reward = - queue - self.coef_wait * wait
+                reward = - 50 * queue - wait
             rewards.append(reward)
         return np.array(rewards)
 
@@ -462,6 +463,13 @@ class TrafficSimulator:
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
                         else:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
+
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        for vehID in vehIDs:
+                            if self.sim.vehicle.getStopState(vehID) == 1:
+                                cur_wave = cur_wave + 20
+                            else:
+                                cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
