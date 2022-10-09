@@ -30,7 +30,6 @@ def parse_args():
     sp = subparsers.add_parser('train', help='train a single agent under base dir')
     sp.add_argument('--config-dir', type=str, required=False,
                     default=default_config_dir, help="experiment config path")
-    # sp.add_argument('--demo', action='store_true', help="shows SUMO gui")
     sp = subparsers.add_parser('evaluate', help="evaluate and compare agents under base dir")
     sp.add_argument('--evaluation-seeds', type=str, required=False,
                     default=','.join([str(i) for i in range(2000, 2500, 10)]),
