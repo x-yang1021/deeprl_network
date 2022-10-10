@@ -253,7 +253,7 @@ class TrafficSimulator:
             accident_veh = np.random.choice(traci.vehicle.getIDList())
             route_index = traci.vehicle.getRouteIndex(accident_veh)
             veh_route = traci.vehicle.getRoute(accident_veh)
-            if route_index < len(veh_route):
+            if route_index < len(veh_route)-1:
                 break
         accident_edge = veh_route[route_index + 1]
         accident_lane = list(accident_edge)
