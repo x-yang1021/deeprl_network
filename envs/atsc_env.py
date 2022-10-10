@@ -244,24 +244,23 @@ class TrafficSimulator:
         # accident_lane.append('0')
         # accident_lane = "".join(accident_lane)
         # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
-        # accident_veh = np.random.choice(self.sim.vehicle.getIDList())
-        # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
-        # accident_position = self.sim.vehicle.getLanePosition(accident_veh)
+        accident_edge = np.random.choice(self.sim.edge.getIDList())
+        accident_veh = np.random.choice(self.sim.edge.getLastStepVehicleIDs(accident_edge))
+        self.sim.vehicle.setSpeed(vehID=accident_veh, speed=0)
+        # i = 0
+        # while i < 10:
+        #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        #     route_index = self.sim.vehicle.getRouteIndex(accident_veh)
+        #     veh_route = self.sim.vehicle.getRoute(accident_veh)
+        #     if route_index < len(veh_route)-1:
+        #         break
+        # accident_edge = veh_route[route_index + 1]
+        # accident_lane = list(accident_edge)
+        # accident_lane.append('_')
+        # accident_lane.append('0')
+        # accident_lane = "".join(accident_lane)
+        # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
         # self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_edge, pos=accident_position)
-        i = 0
-        while i < 10:
-            accident_veh = np.random.choice(traci.vehicle.getIDList())
-            route_index = traci.vehicle.getRouteIndex(accident_veh)
-            veh_route = traci.vehicle.getRoute(accident_veh)
-            if route_index < len(veh_route)-1:
-                break
-        accident_edge = veh_route[route_index + 1]
-        accident_lane = list(accident_edge)
-        accident_lane.append('_')
-        accident_lane.append('0')
-        accident_lane = "".join(accident_lane)
-        accident_position = str(np.random.choice(int(traci.lane.getLength(accident_lane))))
-        self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_edge, pos=accident_position)
 
     def terminate(self):
         self.sim.close()

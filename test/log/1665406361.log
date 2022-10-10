@@ -1,4 +1,4 @@
-2022-10-10 06:58:29,873 [INFO] neighbor mask:
+2022-10-10 13:52:41,350 [INFO] neighbor mask:
  array([[0., 1., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
         0., 0., 0., 0., 0., 0., 0., 0., 0.],
        [1., 0., 1., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
@@ -49,7 +49,7 @@
         0., 0., 1., 0., 0., 0., 1., 0., 1.],
        [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
         0., 0., 0., 1., 0., 0., 0., 1., 0.]])
-2022-10-10 06:58:30,932 [INFO] Env: init 25 node information:
+2022-10-10 13:52:42,383 [INFO] Env: init 25 node information:
 nt1:
 	neigbor: ['nt6', 'nt2']
 	ilds_in: ['nt6_nt1_0', 'nt6_nt1_0', 'nt6_nt1_1', 'nt6_nt1_1', 'nt2_nt1_0', 'nt2_nt1_0', 'nt2_nt1_1', 'nt2_nt1_1', 'np1_nt1_0', 'np1_nt1_0', 'np1_nt1_1', 'np1_nt1_1', 'np20_nt1_0', 'np20_nt1_0', 'np20_nt1_1', 'np20_nt1_1']
@@ -126,7 +126,4 @@ nt25:
 	neigbor: ['nt20', 'nt24']
 	ilds_in: ['np11_nt25_0', 'np11_nt25_0', 'np11_nt25_1', 'np11_nt25_1', 'np10_nt25_0', 'np10_nt25_0', 'np10_nt25_1', 'np10_nt25_1', 'nt20_nt25_0', 'nt20_nt25_0', 'nt20_nt25_1', 'nt20_nt25_1', 'nt24_nt25_0', 'nt24_nt25_0', 'nt24_nt25_1', 'nt24_nt25_1']
 
-2022-10-10 06:58:30,932 [INFO] Training: a dim [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6], agent dim: 25
-2022-10-10 07:03:18,692 [WARNING] From /home/xiangmin/miniconda3/lib/python3.9/site-packages/tensorflow/python/training/rmsprop.py:188: calling Ones.__init__ (from tensorflow.python.ops.init_ops) with dtype is deprecated and will be removed in a future version.
-Instructions for updating:
-Call initializer instance with the dtype argument instead of passing it to the constructor
+2022-10-10 13:52:42,383 [INFO] Training: a dim [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6], agent dim: 25
