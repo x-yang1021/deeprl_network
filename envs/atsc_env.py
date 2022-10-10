@@ -244,8 +244,9 @@ class TrafficSimulator:
         # accident_lane.append('0')
         # accident_lane = "".join(accident_lane)
         # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
-        accident_edge = np.random.choice(self.sim.edge.getIDList())
-        accident_veh = np.random.choice(self.sim.edge.getLastStepVehicleIDs(accident_edge))
+        accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
+        # accident_position = self.sim.vehicle.getLanePosition(accident_veh)
         self.sim.vehicle.setSpeed(vehID=accident_veh, speed=0)
         # i = 0
         # while i < 10:
