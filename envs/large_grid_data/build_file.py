@@ -232,7 +232,7 @@ def sample_od_pair(orig_edges, dest_edges):
 
 
 def init_routes(density):
-    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="1" departLane="%d" departSpeed="0" number="%d" type="type1"/>\n'
+    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.002" type="type1"/>\n'
     output = ''
     in_nodes = [5, 10, 15, 20, 25, 21, 16, 11, 6, 1,
                 1, 2, 3, 4, 5, 25, 24, 23, 22, 21]
@@ -240,40 +240,59 @@ def init_routes(density):
                  1, 2, 3, 4, 5, 11, 12, 13, 14, 15]
     # external edges
     sink_edges = []
+    source_edges = []
     for i, j in zip(in_nodes, out_nodes):
         node1 = 'nt' + str(i)
         node2 = 'np' + str(j)
         sink_edges.append('%s_%s' % (node1, node2))
 
-    def get_od(node1, node2, k, lane=0):
-        source_edge = '%s_%s' % (node1, node2)
-        sink_edge = np.random.choice(sink_edges)
-        return init_flow % (str(k), source_edge, sink_edge, lane, car_num)
+    for i, j in zip(out_nodes, in_nodes):
+        node1 = 'np' + str(i)
+        node2 = 'nt' + str(j)
+        source_edges.append('%s_%s' % (node1, node2))
 
-    # streets
     k = 1
-    car_num = int(MAX_CAR_NUM * density)
-    for i in range(1, 25, 5):
-        for j in range(4):
-            node1 = 'nt' + str(i + j)
-            node2 = 'nt' + str(i + j + 1)
-            output += get_od(node1, node2, k)
-            k += 1
-            output += get_od(node2, node1, k)
-            k += 1
-            output += get_od(node1, node2, k, lane=1)
-            k += 1
-            output += get_od(node2, node1, k, lane=1)
-            k += 1
-    # avenues
-    for i in range(1, 6):
-        for j in range(0, 20, 5):
-            node1 = 'nt' + str(i + j)
-            node2 = 'nt' + str(i + j + 5)
-            output += get_od(node1, node2, k)
-            k += 1
-            output += get_od(node2, node1, k)
-            k += 1
+    for sink_edge in sink_edges:
+        for source_edge in source_edges:
+            output+= init_flow % (str(k), source_edge, sink_edge, 0)
+            k+= 1
+            output+= init_flow % (str(k), source_edge, sink_edge, 1)
+            k+= 1
+
+
+    # def get_od(node1, node2, k, lane=0):
+    #     source_edge = '%s_%s' % (node1, node2)
+    #     sink_edge = np.random.choice(sink_edges)
+    #     return init_flow % (str(k), source_edge, sink_edge, lane, car_num)
+
+    # # streets
+    # k = 1
+    # car_num = int(MAX_CAR_NUM * density)
+    # for i in range(1, 25, 5):
+    #     for j in range(4):
+    #         node1 = 'nt' + str(i + j)
+    #         node2 = 'nt' + str(i + j + 1)
+    #         output += get_od(node1, node2, k)
+    #         k += 1
+    #         output += get_od(node2, node1, k)
+    #         k += 1
+    #         output += get_od(node1, node2, k, lane=1)
+    #         k += 1
+    #         output += get_od(node2, node1, k, lane=1)
+    #         k += 1
+    # # avenues
+    # for i in range(1, 6):
+    #     for j in range(0, 20, 5):
+    #         node1 = 'nt' + str(i + j)
+    #         node2 = 'nt' + str(i + j + 5)
+    #         output += get_od(node1, node2, k)
+    #         k += 1
+    #         output += get_od(node2, node1, k)
+    #         k += 1
+    #         output += get_od(node1, node2, k, lane=1)
+    #         k += 1
+    #         output += get_od(node2, node1, k, lane=1)
+    #         k += 1
     return output
 
 def output_flows(peak_flow1, peak_flow2, density, seed=None): #1000 2000 0.2
@@ -289,51 +308,51 @@ def output_flows(peak_flow1, peak_flow2, density, seed=None): #1000 2000 0.2
     str_flows = '<routes>\n'
     str_flows += '  <vType id="type1" length="5" accel="5" decel="10"/>\n'
     # initial traffic dist
-    if density > 0:
-        str_flows += init_routes(density)
-
-    # create external origins and destinations for flows
-    srcs = []
-    srcs.append(get_external_od([12, 13, 14], dest=False))
-    srcs.append(get_external_od([16, 18, 20], dest=False))
-    srcs.append(get_external_od([2, 3, 4], dest=False))
-    srcs.append(get_external_od([6, 8, 10], dest=False))
-
-    sinks = []
-    sinks.append(get_external_od([2, 3, 4]))
-    sinks.append(get_external_od([6, 8, 10]))
-    sinks.append(get_external_od([14, 13, 12]))
-    sinks.append(get_external_od([20, 18, 16]))
-
-    # create volumes per 5 min for flows
-    ratios1 = np.array([0.4, 0.7, 0.9, 1.0, 0.75, 0.5, 0.25]) # start from 0
-    ratios2 = np.array([0.3, 0.8, 0.9, 1.0, 0.8, 0.6, 0.2])   # start from 15min
-    flows1 = peak_flow1 * 0.6 * ratios1
-    flows2 = peak_flow1 * ratios1
-    flows3 = peak_flow2 * 0.6 * ratios2
-    flows4 = peak_flow2 * ratios2
-    flows = [flows1, flows2, flows3, flows4]
-    times = np.arange(0, 3001, 300)
-    id1 = len(flows1)
-    id2 = len(times) - 1 - id1
-    for i in range(len(times) - 1):
-        name = str(i)
-        t_begin, t_end = times[i], times[i + 1]
-        # external flow
-        k = 0
-        if i < id1:
-            for j in [0, 1]:
-                for e1, e2 in zip(srcs[j], sinks[j]):
-                    cur_name = name + '_' + str(k)
-                    str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i])
-                    k += 1
-        if i >= id2:
-            for j in [2, 3]:
-                for e1, e2 in zip(srcs[j], sinks[j]):
-                    cur_name = name + '_' + str(k)
-                    str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i - id2])
-                    k += 1
+    str_flows += init_routes(density)
+#
+#     # create external origins and destinations for flows
+#     srcs = []
+#     srcs.append(get_external_od([12, 13, 14], dest=False))
+#     srcs.append(get_external_od([16, 18, 20], dest=False))
+#     srcs.append(get_external_od([2, 3, 4], dest=False))
+#     srcs.append(get_external_od([6, 8, 10], dest=False))
+#
+#     sinks = []
+#     sinks.append(get_external_od([2, 3, 4]))
+#     sinks.append(get_external_od([6, 8, 10]))
+#     sinks.append(get_external_od([14, 13, 12]))
+#     sinks.append(get_external_od([20, 18, 16]))
+#
+#     # create volumes per 5 min for flows
+#     ratios1 = np.array([0.4, 0.7, 0.9, 1.0, 0.75, 0.5, 0.25]) # start from 0
+#     ratios2 = np.array([0.3, 0.8, 0.9, 1.0, 0.8, 0.6, 0.2])   # start from 15min
+#     flows1 = peak_flow1 * 0.6 * ratios1
+#     flows2 = peak_flow1 * ratios1
+#     flows3 = peak_flow2 * 0.6 * ratios2
+#     flows4 = peak_flow2 * ratios2
+#     flows = [flows1, flows2, flows3, flows4]
+#     times = np.arange(0, 3001, 300)
+#     id1 = len(flows1)
+#     id2 = len(times) - 1 - id1
+#     for i in range(len(times) - 1):
+#         name = str(i)
+#         t_begin, t_end = times[i], times[i + 1]
+#         # external flow
+#         k = 0
+#         if i < id1:
+#             for j in [0, 1]:
+#                 for e1, e2 in zip(srcs[j], sinks[j]):
+#                     cur_name = name + '_' + str(k)
+#                     str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i])
+#                     k += 1
+#         if i >= id2:
+#             for j in [2, 3]:
+#                 for e1, e2 in zip(srcs[j], sinks[j]):
+#                     cur_name = name + '_' + str(k)
+#                     str_flows += ext_flow % (cur_name, e1, e2, t_begin, t_end, flows[j][i - id2])
+#                     k += 1
     str_flows +='</routes>\n'
+    print(str_flows)
     return str_flows
 
 
