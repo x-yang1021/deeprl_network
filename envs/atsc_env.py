@@ -370,8 +370,6 @@ class TrafficSimulator:
             for lane_name in lanes_in:
                 if self.name == 'atsc_real_net':
                     cur_ilds_in = [lane_name]
-                    if (node_name, lane_name) in self.extended_lanes:
-                        cur_ilds_in += self.extended_lanes[(node_name, lane_name)]
                     ilds_in.append(cur_ilds_in)
                     cur_cap = 0
                     for ild_name in cur_ilds_in:
@@ -448,8 +446,7 @@ class TrafficSimulator:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
                         cur_queue = min(cur_queue, QUEUE_MAX)
                     else:
-                        queue_length = self.sim.lane.getLastStepHaltingNumber(ild)
-                        cur_queue = 1 if queue_length >= (int(self.sim.lane.getLength(ild)/7)-1) else 0
+                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     max_pos = 0
@@ -471,7 +468,7 @@ class TrafficSimulator:
             elif self.obj == 'wait':
                 reward = - wait
             else:
-                reward = - 50 * queue - wait
+                reward = - queue - self.coef_wait * wait
             rewards.append(reward)
         return np.array(rewards)
 
@@ -488,15 +485,21 @@ class TrafficSimulator:
                                 cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                            for vehID in vehIDs:
+                                if self.sim.vehicle.getStopState(vehID) == 1:
+                                    cur_wave = cur_wave + 1
+                                else:
+                                    cur_wave = cur_wave
                         else:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                            for vehID in vehIDs:
+                                if self.sim.vehicle.getStopState(vehID) == 1:
+                                    cur_wave = cur_wave + 20
+                                else:
+                                    cur_wave = cur_wave
 
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                        for vehID in vehIDs:
-                            if self.sim.vehicle.getStopState(vehID) == 1:
-                                cur_wave = cur_wave + 20
-                            else:
-                                cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
