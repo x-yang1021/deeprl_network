@@ -1,5 +1,5 @@
 """
-ATSC scenario: Monaco traffic network
+ATSC scenario: Hangzhou traffic network
 @author: Tianshu Chu
 """
 
@@ -18,8 +18,8 @@ sns.set_color_codes()
 
 STATE_NAMES = ['wave']
 # node: (phase key, neighbor list)
-NODES = {'10026': ('6.0', ['9431', '9561', 'cluster_9563_9597', '9531']), 
-         '8794': ('4.0', ['cluster_8985_9609', '9837', '9058', 'cluster_9563_9597']),
+NODES = {'cluster_5158769537_5158769538': ('7.0', ['cluster_5158769525_5158769526', '5064096736']),
+         'cluster_5158769525_5158769526': ('7.1', ['cluster_5158769537_5158769538', 'cluster_2059544963_5167373335', 'cluster_9976813633_9976813660']),
          '8940': ('2.1', ['9007', '9429']),
          '8996': ('2.2', []),
          '9007': ('2.3', ['9309', '8940']),
@@ -47,8 +47,8 @@ NODES = {'10026': ('6.0', ['9431', '9561', 'cluster_9563_9597', '9531']),
          'joinedS_0': ('6.1', ['9058', 'cluster_9563_9597', '9466']),
          'joinedS_1': ('3.2', ['9531', '9429'])}
 
-PHASES = {'4.0': ['GGgrrrGGgrrr', 'rrrGGgrrrGGg', 'rrGrrrrrGrrr', 'rrrrrGrrrrrG'],
-          '4.1': ['GGgrrGGGrrr', 'rrGrrrrrrrr', 'rrrGgrrrGGg', 'rrrrGrrrrrG'],
+PHASES = {'7.0':['GGrrGGg', 'rrGGrrr'],
+          '7.1': ['GGggGGG','rrrrrrr'],
           '4.2': ['GGGGrrrrrrrr', 'GGggrrGGggrr', 'rrrGGGGrrrrr', 'grrGGggrrGGg'],
           '2.0': ['GGrrr', 'ggGGG'],
           '2.1': ['GGGrrr', 'rrGGGg'],
