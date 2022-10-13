@@ -41,7 +41,7 @@ def parse_args():
         exit(1)
     return args
 
-"test"
+"test git"
 
 def init_env(config, port=0):
     scenario = config.get('scenario')
