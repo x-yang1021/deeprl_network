@@ -40,6 +40,7 @@ def parse_args():
         parser.print_help()
         exit(1)
     return args
+"Test git"
 
 
 def init_env(config, port=0):
