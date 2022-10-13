@@ -468,7 +468,7 @@ class TrafficSimulator:
             elif self.obj == 'wait':
                 reward = - wait
             else:
-                reward = - queue - self.coef_wait * wait
+                reward = - queue - wait
             rewards.append(reward)
         return np.array(rewards)
 
