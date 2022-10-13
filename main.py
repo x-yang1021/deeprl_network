@@ -40,9 +40,8 @@ def parse_args():
         parser.print_help()
         exit(1)
     return args
-"Test git"
 
-
+"test git"
 def init_env(config, port=0):
     scenario = config.get('scenario')
     if scenario.startswith('atsc'):
