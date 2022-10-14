@@ -286,7 +286,7 @@ class NCMultiAgentPolicy(Policy):
         if self.identical:
             h, new_states = lstm_comm(ob, policy, done, self.neighbor_mask, self.loss_rate, self.states, 'lstm_comm')
         else:
-            h, new_states = lstm_comm_hetero(ob, policy, done, self.neighbor_mask, self.states,
+            h, new_states = lstm_comm_hetero(ob, policy, done, self.neighbor_mask, self.loss_rate,self.states,
                                              self.n_s_ls, self.n_a_ls, 'lstm_comm')
         pi_ls = []
         v_ls = []

@@ -18,27 +18,6 @@ VEH_LEN_M = 7.5 # effective vehicle length
 QUEUE_MAX = 10
 
 
-node_names = []
-
-node_names += ['nt%d' % i for i in range(1, 26)]
-
-G = nx.Graph()
-
-G.add_nodes_from(node_names)
-
-G.add_edges_from([
-    ('nt1','nt6'),('nt6','nt11'),('nt11','nt16'),('nt16','nt21'),
-    ('nt1','nt2'),('nt6','nt7'),('nt11','nt12'),('nt16','nt17'),('nt22','nt21'),
-    ('nt7','nt2'),('nt12','nt7'),('nt17','nt12'),('nt22','nt17'),
-    ('nt3','nt2'),('nt8','nt7'),('nt13','nt12'),('nt18','nt17'),('nt22','nt23'),
-    ('nt3','nt8'),('nt8','nt13'),('nt13','nt18'),('nt18','nt23'),
-    ('nt3','nt4'),('nt8','nt9'),('nt13','nt14'),('nt18','nt19'),('nt24','nt23'),
-    ('nt9','nt4'),('nt14','nt9'),('nt19','nt14'),('nt24','nt19'),
-    ('nt5','nt4'),('nt10','nt9'),('nt15','nt14'),('nt20','nt19'),('nt24','nt25'),
-    ('nt5','nt10'),('nt10','nt15'),('nt15','nt20'),('nt20','nt25')
-               ])
-centrality = nx.closeness_centrality(G)
-
 
 class PhaseSet:
     def __init__(self, phases):
@@ -127,6 +106,8 @@ class TrafficSimulator:
         self._init_nodes()
         self.terminate()
 
+
+
     def collect_tripinfo(self):
         # read trip xml, has to be called externally to get complete file
         trip_file = self.output_path + ('%s_%s_trip.xml' % (self.name, self.agent))
@@ -185,7 +166,7 @@ class TrafficSimulator:
         trip_data = pd.DataFrame(self.trip_data)
         trip_data.to_csv(self.output_path + ('%s_%s_trip.csv' % (self.name, self.agent)))
 
-    def reset(self, gui=True, test_ind=0):
+    def reset(self, gui=False, test_ind=0):
         # have to terminate previous sim before calling reset
         self._reset_state()
         if self.train_mode:
@@ -230,21 +211,21 @@ class TrafficSimulator:
             reward = global_reward
         return state, reward, done, global_reward
 
-    def accident(self):
-        i = 0
-        while i < 10:
-            accident_veh = np.random.choice(self.sim.vehicle.getIDList())
-            veh_edge = self.sim.vehicle.getRoadID(accident_veh)
-            veh_route = self.sim.vehicle.getRoute(accident_veh)
-            if veh_route.index(veh_edge) < len(veh_route):
-                break
-            accident_edge = veh_route[veh_route.index(veh_edge) + 1]
-            accident_lane = list(accident_edge)
-            accident_lane.append('_')
-            accident_lane.append('0')
-            accident_lane = "".join(accident_lane)
-            accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
-            self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_edge, pos=accident_position)
+    # def accident(self):
+        # i = 0
+        # while i < 10:
+        #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        #     veh_edge = self.sim.vehicle.getRoadID(accident_veh)
+        #     veh_route = self.sim.vehicle.getRoute(accident_veh)
+        #     if veh_route.index(veh_edge) < len(veh_route):
+        #         break
+        #     accident_edge = veh_route[veh_route.index(veh_edge) + 1]
+        #     accident_lane = list(accident_edge)
+        #     accident_lane.append('_')
+        #     accident_lane.append('0')
+        #     accident_lane = "".join(accident_lane)
+        #     accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
+        #     self.sim.vehicle.setStop(vehID=accident_veh, edgeID=accident_edge, pos=accident_position)
 
 
     def terminate(self):
@@ -354,8 +335,6 @@ class TrafficSimulator:
             for lane_name in lanes_in:
                 if self.name == 'atsc_real_net':
                     cur_ilds_in = [lane_name]
-                    if (node_name, lane_name) in self.extended_lanes:
-                        cur_ilds_in += self.extended_lanes[(node_name, lane_name)]
                     ilds_in.append(cur_ilds_in)
                     cur_cap = 0
                     for ild_name in cur_ilds_in:
@@ -402,6 +381,43 @@ class TrafficSimulator:
         time.sleep(1)
         self.sim = traci.connect(port=self.port)
 
+        distance = np.zeros((len(self.node_names), len(self.node_names)))
+
+        for i in self.node_names:
+            for j in self.node_names:
+                if self.neighbor_mask[self.node_names.index(i), self.node_names.index(j)] == 1:
+                    node1 = self.sim.junction.getPosition(str(i))
+                    node2 = self.sim.junction.getPosition(str(j))
+                    distance[self.node_names.index(i)][self.node_names.index(j)] = min(450, int(
+                        self.sim.simulation.getDistance2D(node1[0], node1[1], node2[0], node2[1]) / 25) * 25)
+                else:
+                    distance[self.node_names.index(j)][self.node_names.index(j)] = 0
+        loss_distance = {0: 0,
+                         25: 0.96,
+                         50: 0.96,
+                         75: 0.93,
+                         100: 0.91,
+                         125: 0.88,
+                         150: 0.88,
+                         175: 0.83,
+                         200: 0.78,
+                         225: 0.75,
+                         250: 0.75,
+                         275: 0.69,
+                         300: 0.67,
+                         325: 0.65,
+                         350: 0.63,
+                         375: 0.63,
+                         400: 0.58,
+                         425: 0.5,
+                         450: 0.5}
+        self.loss_rate = np.zeros((len(self.node_names), len(self.node_names)))
+
+        for i in range(len(self.node_names)):
+            for j in range(len(self.node_names)):
+                self.loss_rate[i, j] = loss_distance[distance[i, j]]
+        return self.loss_rate
+
     def _init_sim_config(self):
         # needs to be overwriteen
         raise NotImplementedError()
@@ -422,6 +438,70 @@ class TrafficSimulator:
             self.n_s_ls.append(num_wait + num_wave)
 
     def _measure_reward_step(self):
+
+        G = nx.DiGraph()
+
+        G.add_nodes_from(self.node_names)
+
+        G.add_edges_from([
+        ('cluster_5158769537_5158769538','cluster_5158769525_5158769526'),('cluster_5158769537_5158769538','5064096736'),
+        ('cluster_5158769525_5158769526','cluster_5158769537_5158769538'),('cluster_5158769525_5158769526','cluster_2059544963_5167373335'),
+        ('cluster_5158769525_5158769526','cluster_9976813633_9976813660'),
+        ('5064096736','cluster_5158769537_5158769538'),('5064096736','cluster_9976813632_9976813652'),
+        ('cluster_9976813632_9976813652','5064096736'),('cluster_9976813632_9976813652','cluster_9976813633_9976813660'),
+        ('cluster_9976813632_9976813652','5158769572'),
+        ('cluster_9976813633_9976813660','cluster_9976813632_9976813652'),('cluster_9976813633_9976813660','cluster_5158769525_5158769526'),
+        ('cluster_9976813633_9976813660','cluster_9976813634_9976813659'),('cluster_9976813633_9976813660','5158769573'),
+        ('5158769572','cluster_9976813632_9976813652'),('5158769572','5158769573'),
+        ('5158769572','cluster_5158769569_5158769570'),
+        ('5158769573','cluster_9976813633_9976813660'),('5158769573','5158769572'),
+        ('5158769573','cluster_5158769556_5158769557'),
+        ('cluster_5158769569_5158769570','5158769572'),('cluster_5158769569_5158769570','cluster_5158769556_5158769557'),
+        ('cluster_5158769556_5158769557','cluster_5158769569_5158769570'),('cluster_5158769556_5158769557','5158769573'),
+        ('cluster_5158769556_5158769557','cluster_5064105232_5064105233'),
+        ('cluster_9976813634_9976813659','cluster_9976813633_9976813660'),('cluster_9976813634_9976813659','5064105223'),
+        ('cluster_9976813634_9976813659','cluster_9976813636_9976813637_9976813661_9976813662'),('cluster_9976813634_9976813659','cluster_5064105232_5064105233'),
+        ('cluster_5064105232_5064105233','cluster_5158769556_5158769557'),('cluster_5064105232_5064105233','cluster_9976813634_9976813659'),
+        ('cluster_5064105232_5064105233','cluster_5064105239_5572714406'),
+        ('cluster_5064105239_5572714406','cluster_5064105232_5064105233'),('cluster_5064105239_5572714406','cluster_5064096677_5064096678_5064096689_5064096690'),
+        ('5064105223','cluster_9976813634_9976813659'),('5064105223','cluster_9976813636_9976813637_9976813661_9976813662'),
+        ('5064105223','5064105224'),
+        ('cluster_9976813636_9976813637_9976813661_9976813662','cluster_9976813634_9976813659'),('cluster_9976813636_9976813637_9976813661_9976813662','5064105223'),
+        ('cluster_9976813636_9976813637_9976813661_9976813662','cluster_9976813638_9976813656'),('cluster_9976813636_9976813637_9976813661_9976813662','cluster_5064096677_5064096678_5064096689_5064096690'),
+        ('cluster_5064096677_5064096678_5064096689_5064096690','cluster_5064105239_5572714406'),('cluster_5064096677_5064096678_5064096689_5064096690','cluster_9976813636_9976813637_9976813661_9976813662'),
+        ('cluster_5064096677_5064096678_5064096689_5064096690','cluster_5064096680_5064096687'),
+        ('cluster_2059544963_5167373335','cluster_5158769525_5158769526'),('cluster_2059544963_5167373335','cluster_5064105244_5167373383'),
+        ('cluster_2059544963_5167373335','5064105224'),
+        ('5064105224','cluster_2059544963_5167373335'),('5064105224','5064105223'),
+        ('5064105224','cluster_9976813638_9976813656'),
+        ('cluster_9976813638_9976813656','5064105224'),('cluster_9976813638_9976813656','cluster_9976813636_9976813637_9976813661_9976813662'),
+        ('cluster_9976813638_9976813656','cluster_5064096680_5064096687'),
+        ('cluster_5064096680_5064096687','cluster_5064096677_5064096678_5064096689_5064096690'),('cluster_5064096680_5064096687','cluster_9976813638_9976813656'),
+        ('cluster_5064096680_5064096687','5064105247'),
+        ('cluster_5064105244_5167373383','cluster_2059544963_5167373335'),('cluster_5064105244_5167373383','cluster_2395875407_2890680726_5167373380_5167373381'),
+        ('cluster_5064105244_5167373383','5064105248'),
+        ('5064105248','cluster_5064105244_5167373383'),('5064105248','cluster_5064105249_5064105250'),
+        ('5064105248','9318091992'),
+        ('9318091992','5064105248'),('9318091992','cluster_9318091993_9318091994'),
+        ('9318091992','5064105256'),
+        ('5064105256','9318091992'),('5064105256','cluster_2569264934_2890680725'),
+        ('5064105256','5064105257'),
+        ('5064105257','5064105256'),('5064105257','cluster_5064105258_5064105259'),
+        ('5064105257','5064105247'),
+        ('5064105247','cluster_5064096680_5064096687'),('5064105247','5064105257'),
+        ('5064105247','cluster_2395874702_5064096683_5064096684_9363692528'),
+        ('cluster_2395875407_2890680726_5167373380_5167373381','cluster_5064105244_5167373383'),('cluster_2395875407_2890680726_5167373380_5167373381','cluster_5064105249_5064105250'),
+        ('cluster_5064105249_5064105250','cluster_2395875407_2890680726_5167373380_5167373381'),('cluster_5064105249_5064105250','5064105248'),
+        ('cluster_5064105249_5064105250','cluster_9318091993_9318091994'),
+        ('cluster_9318091993_9318091994','cluster_5064105249_5064105250'),('cluster_9318091993_9318091994','9318091992'),
+        ('cluster_9318091993_9318091994','cluster_2569264934_2890680725'),
+        ('cluster_2569264934_2890680725','cluster_9318091993_9318091994'),('cluster_2569264934_2890680725','5064105256'),
+        ('cluster_2569264934_2890680725','cluster_5064105258_5064105259'),
+        ('cluster_5064105258_5064105259','cluster_2569264934_2890680725'),('cluster_5064105258_5064105259','5064105257'),
+        ('cluster_5064105258_5064105259','cluster_2395874702_5064096683_5064096684_9363692528'),
+        ('cluster_2395874702_5064096683_5064096684_9363692528','cluster_5064105258_5064105259'),('cluster_2395874702_5064096683_5064096684_9363692528','cluster_5064096680_5064096687')])
+        centrality = nx.closeness_centrality(G)
+
         rewards = []
         for node_name in self.node_names:
             queues = []
@@ -455,7 +535,7 @@ class TrafficSimulator:
             elif self.obj == 'wait':
                 reward = - wait
             else:
-                reward = - 50 * queue - wait
+                reward = - queue - wait
             rewards.append(reward)
         return np.array(rewards)
 
@@ -470,17 +550,23 @@ class TrafficSimulator:
                             cur_wave = 0
                             for ild_seg in ild:
                                 cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
+                                vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
+                                for vehID in vehIDs:
+                                    if self.sim.vehicle.getStopState(vehID) == 1:
+                                        cur_wave = cur_wave + node.lanes_capacity[k]
+                                    else:
+                                        cur_wave = cur_wave
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
+
                         else:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
-
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                        for vehID in vehIDs:
-                            if self.sim.vehicle.getStopState(vehID) == 1:
-                                cur_wave = cur_wave + 20
-                            else:
-                                cur_wave = cur_wave
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                            for vehID in vehIDs:
+                                if self.sim.vehicle.getStopState(vehID) == 1:
+                                    cur_wave = cur_wave + 20
+                                else:
+                                    cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':

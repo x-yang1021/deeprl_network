@@ -315,14 +315,17 @@ def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, 
             n_m = len(ns_dim_ls[i])
             pi = []
             xi = [tf.slice(x, [i, 0], [1, n_s_ls[i]])]
+            loss_packet = []
             if n_m:
-                for j in range(n_h):
+                for j in range(n_agent):
                     N = n_h
                     d = []
-                    loss_packet = []
-                    d = np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]])
-                    loss_packet.append(d)
-                mi = tf.expand_dims(tf.reshape(tf.multiply(out_m, loss_packet), [-1]), axis=0)
+                    d = np.squeeze(np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
+                    loss_packet.append(d.tolist())
+                loss_packet = np.array(loss_packet)
+                mi = tf.multiply(out_m, loss_packet)
+                mi = tf.boolean_mask(mi, masks[i])
+                mi = tf.expand_dims(tf.reshape(mi, [-1]), axis=0)
                 raw_pi = tf.boolean_mask(p, masks[i]) # n_n*n_a
                 raw_xi = tf.boolean_mask(x, masks[i])
                 # find the valid information based on each agent's s, a dim

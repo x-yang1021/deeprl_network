@@ -1,0 +1,10 @@
+<configuration>
+  <input>
+    <net-file value="xiaoshan/xiaoshan.net.xml"/>
+    <route-files value="xiaoshan/xiaoshan.trips.xml"/>
+  </input>
+  <time>
+    <begin value="0"/>
+    <end value="3600"/>
+  </time>
+</configuration>

@@ -241,7 +241,7 @@ class MA2C_NC(IA2C):
                                       self.neighbor_mask, self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm)
         else:
             return NCMultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
-                                      self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm,
+                                      self.neighbor_mask, self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm,
                                       n_s_ls=self.n_s_ls, n_a_ls=self.n_a_ls, identical=False)
 
     def _init_train(self, model_config, distance_mask, coop_gamma):

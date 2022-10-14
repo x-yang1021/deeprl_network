@@ -1,7 +1,7 @@
 <configuration>
   <input>
-    <net-file value="in/most.net.xml"/>
-    <route-files value="in/most_0.rou.xml"/>
+    <net-file value="xiaoshan/osm.net.xml"/>
+    <route-files value="xiaoshan/osm.passenger.trips.xml/>
   </input>
   <time>
     <begin value="0"/>

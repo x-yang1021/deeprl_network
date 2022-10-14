@@ -167,8 +167,8 @@ class Trainer():
     def explore(self, prev_ob, prev_done):
         ob = prev_ob
         done = prev_done
-        num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=self.n_step))
-        accident_step = np.random.choice(self.n_step,num_accident)
+        # num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=self.n_step))
+        # accident_step = np.random.choice(self.n_step,num_accident)
         for step in range(self.n_step):
             # pre-decision
             policy, action = self._get_policy(ob, done)
@@ -177,8 +177,8 @@ class Trainer():
             # transition
             self.env.update_fingerprint(policy)
             next_ob, reward, done, global_reward = self.env.step(action)
-            if step in accident_step:
-                self.env.accident()
+            # if step in accident_step:
+            #     self.env.accident()
             self.episode_rewards.append(global_reward)
             global_step = self.global_counter.next()
             self.cur_step += 1
