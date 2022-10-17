@@ -210,7 +210,6 @@ class TrafficSimulator:
         state = self._get_state()
         reward = self._measure_reward_step()
         done = False
-        print(state,action)
         if self.cur_sec >= self.episode_length_sec:
             done = True
         global_reward = np.sum(reward)
@@ -404,7 +403,7 @@ class TrafficSimulator:
         command += ['--seed', str(seed)]
         command += ['--remote-port', str(self.port)]
         command += ['--no-step-log', 'True']
-        command += ['--time-to-teleport', '600'] # long teleport for safety
+        command += ['--time-to-teleport', '6000'] # long teleport for safety
         command += ['--no-warnings', 'True']
         command += ['--duration-log.disable', 'True']
         # collect trip info if necessary
@@ -449,20 +448,17 @@ class TrafficSimulator:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
-                    max_pos = 0
-                    car_wait = 0
                     if self.name == 'atsc_real_net':
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                     else:
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                     for vid in cur_cars:
-                        car_pos = self.sim.vehicle.getLanePosition(vid)
-                        if car_pos > max_pos:
-                            max_pos = car_pos
-                            car_wait = self.sim.vehicle.getWaitingTime(vid)
-                    waits.append(car_wait)
+                        if self.sim.vehicle.getStopState(vid) == 1:
+                            waits.append(0)
+                        else:
+                            waits.append(self.sim.vehicle.getWaitingTime(vid))
             queue = centrality[node_name] * np.sum(np.array(queues)) if len(queues) else 0
-            wait = centrality[node_name] * np.sum(np.array(waits)) if len(waits) else 0
+            wait = centrality[node_name] * np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
             elif self.obj == 'wait':
