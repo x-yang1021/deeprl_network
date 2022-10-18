@@ -232,7 +232,8 @@ def sample_od_pair(orig_edges, dest_edges):
 
 
 def init_routes(density):
-    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.01" type="type1"/>\n'
+    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.005" type="type1"/>\n'
+    init_flow2 = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departSpeed="0" probability="0.0025" type="type1"/>\n'
     output = ''
     in_nodes_left = [16, 17, 18, 19, 20]
 
@@ -305,11 +306,14 @@ def init_routes(density):
     #come from right
     for sink_edge in sink_edges_left:
         for source_edge in source_edges_right:
-            if sink_edges_left.index(sink_edge) <= source_edges_right.index(source_edge):
+            if sink_edges_left.index(sink_edge) < source_edges_right.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 0)
                 k += 1
-            else:
+            if sink_edges_left.index(sink_edge) > source_edges_right.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+            if sink_edges_left.index(sink_edge) == source_edges_right.index(source_edge):
+                output += init_flow2 % (str(k), source_edge, sink_edge)
                 k += 1
     for sink_edge in sink_edges_up:
         for source_edge in source_edges_right:
@@ -322,11 +326,14 @@ def init_routes(density):
     #come from left
     for sink_edge in sink_edges_right:
         for source_edge in source_edges_left:
-            if sink_edges_right.index(sink_edge) <= source_edges_left.index(source_edge):
+            if sink_edges_right.index(sink_edge) < source_edges_left.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 1)
                 k += 1
-            else:
+            if sink_edges_right.index(sink_edge) > source_edges_left.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+            if sink_edges_right.index(sink_edge) == source_edges_left.index(source_edge):
+                output += init_flow2 % (str(k), source_edge, sink_edge)
                 k += 1
     for sink_edge in sink_edges_up:
         for source_edge in source_edges_left:
@@ -340,11 +347,14 @@ def init_routes(density):
     #come from up
     for sink_edge in sink_edges_down:
         for source_edge in source_edges_up:
-            if sink_edges_down.index(sink_edge) <= source_edges_up.index(source_edge):
+            if sink_edges_down.index(sink_edge) < source_edges_up.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 0)
                 k += 1
-            else:
+            if sink_edges_down.index(sink_edge) > source_edges_up.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+            if sink_edges_down.index(sink_edge) == source_edges_up.index(source_edge):
+                output += init_flow2 % (str(k), source_edge, sink_edge)
                 k += 1
     for sink_edge in sink_edges_left:
         for source_edge in source_edges_up:
@@ -358,11 +368,14 @@ def init_routes(density):
     #come from down
     for sink_edge in sink_edges_up:
         for source_edge in source_edges_down:
-            if sink_edges_up.index(sink_edge) <= source_edges_down.index(source_edge):
+            if sink_edges_up.index(sink_edge) < source_edges_down.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 1)
                 k += 1
-            else:
+            if sink_edges_up.index(sink_edge) > source_edges_down.index(source_edge):
                 output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+            if sink_edges_up.index(sink_edge) == source_edges_down.index(source_edge):
+                output += init_flow2 % (str(k), source_edge, sink_edge)
                 k += 1
     for sink_edge in sink_edges_left:
         for source_edge in source_edges_down:
