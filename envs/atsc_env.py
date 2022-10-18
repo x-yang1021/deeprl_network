@@ -319,6 +319,11 @@ class TrafficSimulator:
                 if 'wait' in self.state_names:
                     cur_state.append(node.wait_state)
                 state.append(np.concatenate(cur_state))
+
+                # include accident info
+                if 'accident' in self.state_names:
+                    cur_state.append(node.accident_info)
+                state.append(np.concatenate(cur_state))
         return state
 
     def _init_action_space(self):
@@ -419,11 +424,11 @@ class TrafficSimulator:
         for node_name in self.node_names:
             node = self.nodes[node_name]
             num_wave = node.num_state
-            num_wait = 0 if 'wait' not in self.state_names else node.num_state
+            num_accident = 0 if 'accident' not in self.state_names else node.num_state
             if not self.agent.startswith('ma2c'):
                 for nnode_name in node.neighbor:
                     num_wave += self.nodes[nnode_name].num_state
-            self.n_s_ls.append(num_wait + num_wave)
+            self.n_s_ls.append(num_accident + num_wave)
 
     def _measure_reward_step(self):
         rewards = []
@@ -450,7 +455,7 @@ class TrafficSimulator:
                     else:
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                     for vid in cur_cars:
-                        if self.sim.vehicle.getStopState(vid) == 1:
+                        if vehID in self.accident_vehs:
                             waits.append(0)
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
@@ -478,12 +483,6 @@ class TrafficSimulator:
                                 cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
-                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                            for vehID in vehIDs:
-                                if vehID in self.accident_vehs:
-                                    cur_wave = cur_wave + 1
-                                else:
-                                    cur_wave = cur_wave
                         else:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                             # vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
@@ -497,19 +496,23 @@ class TrafficSimulator:
                 elif state_name == 'wait':
                     cur_state = []
                     for ild in node.ilds_in:
-                        max_pos = 0
-                        car_wait = 0
                         if self.name == 'atsc_real_net':
                             cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
                         else:
                             cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                         for vid in cur_cars:
-                            car_pos = self.sim.vehicle.getLanePosition(vid)
-                            if car_pos > max_pos:
-                                max_pos = car_pos
-                                car_wait = self.sim.vehicle.getWaitingTime(vid)
-                        cur_state.append(car_wait)
+                            cur_state.append(self.sim.vehicle.getWaitingTime(vid))
                     cur_state = np.array(cur_state)
+                elif state_name == 'accident':
+                    cur_state = []
+                    for ild in node,ilds_in:
+                        accident_info = 0
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        for vehID in vehIDs:
+                            if vehID in self.accident_vehs:
+                                accident_info = 1
+                        cur_state.append(accident_info)
+                    node.accident_info = np.array(cur_state)
                 if self.record_stats:
                     self.state_stat[state_name] += list(cur_state)
                 # normalization
@@ -519,7 +522,7 @@ class TrafficSimulator:
                 if state_name == 'wave':
                     node.wave_state = norm_cur_state
                 else:
-                    node.wait_state = norm_cur_state
+                    node.wave_state = norm_cur_state
 
     def _measure_traffic_step(self):
         cars = self.sim.vehicle.getIDList()
