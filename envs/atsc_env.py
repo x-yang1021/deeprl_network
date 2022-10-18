@@ -185,7 +185,7 @@ class TrafficSimulator:
         trip_data = pd.DataFrame(self.trip_data)
         trip_data.to_csv(self.output_path + ('%s_%s_trip.csv' % (self.name, self.agent)))
 
-    def reset(self, gui=False, test_ind=0):
+    def reset(self, gui=True, test_ind=0):
         # have to terminate previous sim before calling reset
         self._reset_state()
         if self.train_mode:
@@ -234,6 +234,7 @@ class TrafficSimulator:
 
         self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         self.accident_vehs.append(self.accident_veh)
+        # print(self.accident_vehs)
         # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
         # accident_position = self.sim.vehicle.getLanePosition(accident_veh)
         self.sim.vehicle.setSpeed(vehID=self.accident_veh, speed=0)
@@ -453,7 +454,7 @@ class TrafficSimulator:
                             waits.append(0)
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
-            queue = centrality[node_name] * np.sum(np.array(queues)) if len(queues) else 0
+            queue = centrality[node_name] * np.mean(np.array(queues)) if len(queues) else 0
             wait = centrality[node_name] * np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
@@ -485,12 +486,12 @@ class TrafficSimulator:
                                     cur_wave = cur_wave
                         else:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
-                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                            for vehID in vehIDs:
-                                if vehID in self.accident_vehs:
-                                    cur_wave = cur_wave + self.sim.lane.getLength(ild)/10
-                                else:
-                                    cur_wave = cur_wave
+                            # vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                            # for vehID in vehIDs:
+                            #     if vehID in self.accident_vehs:
+                            #         cur_wave = cur_wave + self.sim.lane.getLength(ild)/10
+                            #     else:
+                            #         cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
