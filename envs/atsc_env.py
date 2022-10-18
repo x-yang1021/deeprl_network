@@ -243,10 +243,10 @@ class TrafficSimulator:
         # accident_lane.append('0')
         # accident_lane = "".join(accident_lane)
         # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
-        accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
         # accident_position = self.sim.vehicle.getLanePosition(accident_veh)
-        self.sim.vehicle.setSpeed(vehID=accident_veh, speed=0)
+        self.sim.vehicle.setSpeed(vehID=self.accident_veh, speed=0)
         # i = 0
         # while i < 10:
         #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
@@ -491,7 +491,7 @@ class TrafficSimulator:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                             vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
                             for vehID in vehIDs:
-                                if self.sim.vehicle.getStopState(vehID) == 1:
+                                if vehID == self.accident_veh:
                                     cur_wave = cur_wave + 20
                                 else:
                                     cur_wave = cur_wave
