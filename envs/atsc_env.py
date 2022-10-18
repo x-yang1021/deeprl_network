@@ -500,10 +500,9 @@ class TrafficSimulator:
                             vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
                             for vehID in vehIDs:
                                 if vehID in self.accident_vehs:
-                                    cur_wave = cur_wave + 20
+                                    cur_wave = cur_wave + self.sim.lane.getLength(ild)/10
                                 else:
                                     cur_wave = cur_wave
-
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
                 elif state_name == 'wait':
