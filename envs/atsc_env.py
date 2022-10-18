@@ -243,7 +243,9 @@ class TrafficSimulator:
         # accident_lane.append('0')
         # accident_lane = "".join(accident_lane)
         # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
+        self.accident_vehs = []
         self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        self.accident_vehs.append(self.accident_veh)
         # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
         # accident_position = self.sim.vehicle.getLanePosition(accident_veh)
         self.sim.vehicle.setSpeed(vehID=self.accident_veh, speed=0)
@@ -446,6 +448,12 @@ class TrafficSimulator:
                         cur_queue = min(cur_queue, QUEUE_MAX)
                     else:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        for vehID in vehIDs:
+                            if vehID in self.accident_vehs:
+                                cur_queue = cur_queue - 1
+                            else:
+                                cur_queue = cur_queue
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     if self.name == 'atsc_real_net':
@@ -483,7 +491,7 @@ class TrafficSimulator:
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
                             vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
                             for vehID in vehIDs:
-                                if self.sim.vehicle.getStopState(vehID) == 1:
+                                if vehID in self.accident_vehs:
                                     cur_wave = cur_wave + 1
                                 else:
                                     cur_wave = cur_wave
@@ -491,7 +499,7 @@ class TrafficSimulator:
                             cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                             vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
                             for vehID in vehIDs:
-                                if vehID == self.accident_veh:
+                                if vehID in self.accident_vehs:
                                     cur_wave = cur_wave + 20
                                 else:
                                     cur_wave = cur_wave
