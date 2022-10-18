@@ -178,6 +178,7 @@ class Trainer():
 
             for s in self.accident_step:
                 if self.cur_step >= s:
+                    self.accident_vehs=[]
                     self.env.accident()
             # if self.cur_step in self.accident_step:
             #     self.env.accident()

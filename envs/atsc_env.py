@@ -194,6 +194,7 @@ class TrafficSimulator:
             seed = self.test_seeds[test_ind]
         self._init_sim(seed, gui=gui)
         self.cur_sec = 0
+        self.accident_vehs = []
         self.cur_episode += 1
         # initialize fingerprint
         self.update_fingerprint(self._init_policy())
@@ -230,20 +231,7 @@ class TrafficSimulator:
         return state, reward, done, global_reward
 
     def accident(self):
-        # i = 0
-        # while i < 10:
-        #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
-        #     veh_edge = self.sim.vehicle.getRoadID(accident_veh)
-        #     veh_route = self.sim.vehicle.getRoute(accident_veh)
-        #     if veh_route.index(veh_edge) < len(veh_route)-1:
-        #         break
-        # accident_edge = veh_route[veh_route.index(veh_edge) + 1]
-        # accident_lane = list(accident_edge)
-        # accident_lane.append('_')
-        # accident_lane.append('0')
-        # accident_lane = "".join(accident_lane)
-        # accident_position = str(np.random.choice(int(self.sim.lane.getLength(accident_lane))))
-        self.accident_vehs = []
+
         self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         self.accident_vehs.append(self.accident_veh)
         # accident_edge = self.sim.vehicle.getRoadID(accident_veh)
