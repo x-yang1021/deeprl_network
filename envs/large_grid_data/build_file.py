@@ -232,67 +232,146 @@ def sample_od_pair(orig_edges, dest_edges):
 
 
 def init_routes(density):
-    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.015" type="type1"/>\n'
+    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.01" type="type1"/>\n'
     output = ''
-    in_nodes = [5, 10, 15, 20, 25, 21, 16, 11, 6, 1,
-                1, 2, 3, 4, 5, 25, 24, 23, 22, 21]
-    out_nodes = [6, 7, 8, 9, 10, 16, 17, 18, 19, 20,
-                 1, 2, 3, 4, 5, 11, 12, 13, 14, 15]
+    in_nodes_left = [16, 17, 18, 19, 20]
+
+    in_nodes_up = [15, 14, 13, 12, 11]
+
+    in_nodes_right = [10, 9, 8, 7, 6]
+
+    in_nodes_down = [1, 2, 3, 4, 5]
+
+    out_nodes_left = [21, 16, 11, 6, 1]
+
+    out_nodes_up = [21, 22, 23, 24, 25]
+
+    out_nodes_right = [25, 20, 15, 10, 5]
+
+    out_nodes_down = [1, 2, 3, 4, 5]
+
     # external edges
-    sink_edges = []
-    source_edges = []
-    for i, j in zip(in_nodes, out_nodes):
+    sink_edges_left = []
+    source_edges_left = []
+    for i, j in zip(out_nodes_left, in_nodes_left):
         node1 = 'nt' + str(i)
         node2 = 'np' + str(j)
-        sink_edges.append('%s_%s' % (node1, node2))
+        sink_edges_left.append('%s_%s' % (node1, node2))
 
-    for i, j in zip(out_nodes, in_nodes):
+    for i, j in zip(in_nodes_left, out_nodes_left):
         node1 = 'np' + str(i)
         node2 = 'nt' + str(j)
-        source_edges.append('%s_%s' % (node1, node2))
+        source_edges_left.append('%s_%s' % (node1, node2))
+
+    sink_edges_right = []
+    source_edges_right = []
+    for i, j in zip(out_nodes_right, in_nodes_right):
+        node1 = 'nt' + str(i)
+        node2 = 'np' + str(j)
+        sink_edges_right.append('%s_%s' % (node1, node2))
+
+    for i, j in zip(in_nodes_right, out_nodes_right):
+        node1 = 'np' + str(i)
+        node2 = 'nt' + str(j)
+        source_edges_right.append('%s_%s' % (node1, node2))
+
+    sink_edges_up = []
+    source_edges_up = []
+
+    for i, j in zip(out_nodes_up, in_nodes_up):
+        node1 = 'nt' + str(i)
+        node2 = 'np' + str(j)
+        sink_edges_up.append('%s_%s' % (node1, node2))
+
+    for i, j in zip(in_nodes_up, out_nodes_up):
+        node1 = 'np' + str(i)
+        node2 = 'nt' + str(j)
+        source_edges_up.append('%s_%s' % (node1, node2))
+
+    sink_edges_down = []
+    source_edges_down = []
+
+    for i, j in zip(out_nodes_down, in_nodes_down):
+        node1 = 'nt' + str(i)
+        node2 = 'np' + str(j)
+        sink_edges_down.append('%s_%s' % (node1, node2))
+
+    for i, j in zip(in_nodes_down, out_nodes_down):
+        node1 = 'np' + str(i)
+        node2 = 'nt' + str(j)
+        source_edges_down.append('%s_%s' % (node1, node2))
 
     k = 1
-    for sink_edge in sink_edges:
-        for source_edge in source_edges:
-            output+= init_flow % (str(k), source_edge, sink_edge, 0)
-            k+= 1
-            output+= init_flow % (str(k), source_edge, sink_edge, 1)
-            k+= 1
+    #come from right
+    for sink_edge in sink_edges_left:
+        for source_edge in source_edges_right:
+            if sink_edges_left.index(sink_edge) <= source_edges_right.index(source_edge):
+                output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+            else:
+                output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+    for sink_edge in sink_edges_up:
+        for source_edge in source_edges_right:
+            output += init_flow % (str(k), source_edge, sink_edge, 0)
+            k += 1
+    for sink_edge in sink_edges_down:
+        for source_edge in source_edges_right:
+            output += init_flow % (str(k), source_edge, sink_edge, 1)
+            k += 1
+    #come from left
+    for sink_edge in sink_edges_right:
+        for source_edge in source_edges_left:
+            if sink_edges_right.index(sink_edge) <= source_edges_left.index(source_edge):
+                output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+            else:
+                output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+    for sink_edge in sink_edges_up:
+        for source_edge in source_edges_left:
+            output += init_flow % (str(k), source_edge, sink_edge, 1)
+            k += 1
+    for sink_edge in sink_edges_down:
+        for source_edge in source_edges_left:
+            output += init_flow % (str(k), source_edge, sink_edge, 0)
+            k += 1
 
+    #come from up
+    for sink_edge in sink_edges_down:
+        for source_edge in source_edges_up:
+            if sink_edges_down.index(sink_edge) <= source_edges_up.index(source_edge):
+                output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+            else:
+                output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+    for sink_edge in sink_edges_left:
+        for source_edge in source_edges_up:
+            output += init_flow % (str(k), source_edge, sink_edge, 0)
+            k += 1
+    for sink_edge in sink_edges_right:
+        for source_edge in source_edges_up:
+            output += init_flow % (str(k), source_edge, sink_edge, 1)
+            k += 1
 
-    # def get_od(node1, node2, k, lane=0):
-    #     source_edge = '%s_%s' % (node1, node2)
-    #     sink_edge = np.random.choice(sink_edges)
-    #     return init_flow % (str(k), source_edge, sink_edge, lane, car_num)
-
-    # # streets
-    # k = 1
-    # car_num = int(MAX_CAR_NUM * density)
-    # for i in range(1, 25, 5):
-    #     for j in range(4):
-    #         node1 = 'nt' + str(i + j)
-    #         node2 = 'nt' + str(i + j + 1)
-    #         output += get_od(node1, node2, k)
-    #         k += 1
-    #         output += get_od(node2, node1, k)
-    #         k += 1
-    #         output += get_od(node1, node2, k, lane=1)
-    #         k += 1
-    #         output += get_od(node2, node1, k, lane=1)
-    #         k += 1
-    # # avenues
-    # for i in range(1, 6):
-    #     for j in range(0, 20, 5):
-    #         node1 = 'nt' + str(i + j)
-    #         node2 = 'nt' + str(i + j + 5)
-    #         output += get_od(node1, node2, k)
-    #         k += 1
-    #         output += get_od(node2, node1, k)
-    #         k += 1
-    #         output += get_od(node1, node2, k, lane=1)
-    #         k += 1
-    #         output += get_od(node2, node1, k, lane=1)
-    #         k += 1
+    #come from down
+    for sink_edge in sink_edges_up:
+        for source_edge in source_edges_down:
+            if sink_edges_up.index(sink_edge) <= source_edges_down.index(source_edge):
+                output += init_flow % (str(k), source_edge, sink_edge, 1)
+                k += 1
+            else:
+                output += init_flow % (str(k), source_edge, sink_edge, 0)
+                k += 1
+    for sink_edge in sink_edges_left:
+        for source_edge in source_edges_down:
+            output += init_flow % (str(k), source_edge, sink_edge, 1)
+            k += 1
+    for sink_edge in sink_edges_left:
+        for source_edge in source_edges_down:
+            output += init_flow % (str(k), source_edge, sink_edge, 0)
+            k += 1
     return output
 
 def output_flows(peak_flow1, peak_flow2, density, seed=None): #1000 2000 0.2
