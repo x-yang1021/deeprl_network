@@ -232,8 +232,8 @@ def sample_od_pair(orig_edges, dest_edges):
 
 
 def init_routes(density):
-    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.005" type="type1"/>\n'
-    init_flow2 = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departSpeed="0" probability="0.0025" type="type1"/>\n'
+    init_flow = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departLane="%d" departSpeed="0" probability="0.01" type="type1"/>\n'
+    init_flow2 = '  <flow id="i%s" departPos="random_free" from="%s" to="%s" begin="0" end="3600" departSpeed="0" probability="0.005" type="type1"/>\n'
     output = ''
     in_nodes_left = [16, 17, 18, 19, 20]
 

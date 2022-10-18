@@ -185,7 +185,7 @@ class TrafficSimulator:
         trip_data = pd.DataFrame(self.trip_data)
         trip_data.to_csv(self.output_path + ('%s_%s_trip.csv' % (self.name, self.agent)))
 
-    def reset(self, gui=True, test_ind=0):
+    def reset(self, gui=False, test_ind=0):
         # have to terminate previous sim before calling reset
         self._reset_state()
         if self.train_mode:
