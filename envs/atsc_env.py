@@ -91,7 +91,7 @@ class Node:
         self.neighbor = neighbor
         self.num_state = 0 # wave and wait should have the same dim
         self.wave_state = [] # local state
-        self.wait_state = [] # local state
+        self.accident_info = [] # local state
         self.phase_id = -1
         self.n_a = 0
         self.prev_action = -1
@@ -185,7 +185,7 @@ class TrafficSimulator:
         trip_data = pd.DataFrame(self.trip_data)
         trip_data.to_csv(self.output_path + ('%s_%s_trip.csv' % (self.name, self.agent)))
 
-    def reset(self, gui=True, test_ind=0):
+    def reset(self, gui=False, test_ind=0):
         # have to terminate previous sim before calling reset
         self._reset_state()
         if self.train_mode:
@@ -303,7 +303,7 @@ class TrafficSimulator:
             if self.agent == 'greedy':
                 state.append(node.wave_state)
             else:
-                cur_state = [node.wave_state]
+                cur_state =[node.wave_state]
 
                 # include wave states of neighbors
                 if self.agent.startswith('ia2c'):
@@ -314,11 +314,6 @@ class TrafficSimulator:
                 if self.agent == 'ia2c_fp':
                     for nnode_name in node.neighbor:
                         cur_state.append(self.nodes[nnode_name].fingerprint)
-
-                # include wait state
-                if 'wait' in self.state_names:
-                    cur_state.append(node.wait_state)
-                state.append(np.concatenate(cur_state))
 
                 # include accident info
                 if 'accident' in self.state_names:
@@ -493,35 +488,27 @@ class TrafficSimulator:
                             #         cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
-                elif state_name == 'wait':
-                    cur_state = []
-                    for ild in node.ilds_in:
-                        if self.name == 'atsc_real_net':
-                            cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
-                        else:
-                            cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
-                        for vid in cur_cars:
-                            cur_state.append(self.sim.vehicle.getWaitingTime(vid))
-                    cur_state = np.array(cur_state)
                 elif state_name == 'accident':
                     cur_state = []
-                    for ild in node,ilds_in:
-                        accident_info = 0
+                    for ild in node.ilds_in:
                         vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        flag = False
                         for vehID in vehIDs:
                             if vehID in self.accident_vehs:
-                                accident_info = 1
-                        cur_state.append(accident_info)
+                                flag = True
+                        if flag:
+                            cur_state.append(1)
+                        else:
+                            cur_state.append(0)
                     node.accident_info = np.array(cur_state)
                 if self.record_stats:
                     self.state_stat[state_name] += list(cur_state)
                 # normalization
-                norm_cur_state = self._norm_clip_state(cur_state,
+                if state_name == 'wave':
+                    norm_cur_state = self._norm_clip_state(cur_state,
                                                        self.norms[state_name],
                                                        self.clips[state_name])
                 if state_name == 'wave':
-                    node.wave_state = norm_cur_state
-                else:
                     node.wave_state = norm_cur_state
 
     def _measure_traffic_step(self):
