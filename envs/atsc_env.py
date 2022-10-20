@@ -386,6 +386,8 @@ class TrafficSimulator:
 
     def _init_sim(self, seed, gui=False):
         sumocfg_file = self._init_sim_config(seed)
+        teleport_range= np.linspace(900,1500,7)
+        teleport_time = np.random.choice(teleport_range)
         if gui:
             app = 'sumo-gui'
         else:
@@ -394,7 +396,7 @@ class TrafficSimulator:
         command += ['--seed', str(seed)]
         command += ['--remote-port', str(self.port)]
         command += ['--no-step-log', 'True']
-        command += ['--time-to-teleport', '6000'] # long teleport for safety
+        command += ['--time-to-teleport', '%d'%teleport_time] # long teleport for safety
         command += ['--no-warnings', 'True']
         command += ['--duration-log.disable', 'True']
         # collect trip info if necessary
