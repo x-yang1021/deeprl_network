@@ -9,6 +9,12 @@ import subprocess
 import traci
 from scipy import stats
 
+data = pd.read_excel(r'/Users/yang/Documents/GitHub/deeprl_network/envs/real_net_data/accident data.xlsx')
+df = pd.DataFrame(data, columns=['alert_time'])
+time = pd.DataFrame()
+time['date'] = df['alert_time'].dt.date
+time['hour'] = df['alert_time'].dt.hour
+time['minute'] = df['alert_time'].dt.minute
 
 def check_dir(cur_dir):
     if not os.path.exists(cur_dir):
@@ -167,8 +173,19 @@ class Trainer():
     def explore(self, prev_ob, prev_done):
         ob = prev_ob
         done = prev_done
-        # num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=self.n_step))
-        # accident_step = np.random.choice(self.n_step,num_accident)
+        a = np.random.choice(time['date'].unique())
+        a = [a]
+        hour = time.loc[time['date'].isin(a)]
+
+        b = np.random.choice(hour['hour'].unique())
+        b = [b]
+        minute = hour.loc[hour['hour'].isin(b)]
+
+        accident_step = []
+        c = minute['minute'].tolist()
+        for step in c:
+            accident_step.append(step * 12)
+
         for step in range(self.n_step):
             # pre-decision
             policy, action = self._get_policy(ob, done)
@@ -177,8 +194,8 @@ class Trainer():
             # transition
             self.env.update_fingerprint(policy)
             next_ob, reward, done, global_reward = self.env.step(action)
-            # if step in accident_step:
-            #     self.env.accident()
+            if step in accident_step:
+                self.env.accident()
             self.episode_rewards.append(global_reward)
             global_step = self.global_counter.next()
             self.cur_step += 1

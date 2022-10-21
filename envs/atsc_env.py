@@ -211,9 +211,10 @@ class TrafficSimulator:
             reward = global_reward
         return state, reward, done, global_reward
 
-    # def accident(self):
-        # i = 0
-        # while i < 10:
+    def accident(self):
+
+        self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
+        self.accident_vehs.append(self.accident_veh)
         #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         #     veh_edge = self.sim.vehicle.getRoadID(accident_veh)
         #     veh_route = self.sim.vehicle.getRoute(accident_veh)
