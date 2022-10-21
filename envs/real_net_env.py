@@ -17,7 +17,7 @@ import traci
 
 sns.set_color_codes()
 
-STATE_NAMES = ['wave']
+STATE_NAMES = ['wave','accident']
 # node: (phase key, neighbor list)
 NODES = {'cluster_5158769537_5158769538': ('2.0', ['cluster_5158769525_5158769526', '5064096736']),
          'cluster_5158769525_5158769526': ('2.1', ['cluster_5158769537_5158769538', 'cluster_2059544963_5167373335', 'cluster_9976813633_9976813660']),

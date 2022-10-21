@@ -70,7 +70,7 @@ class Node:
         self.neighbor = neighbor
         self.num_state = 0 # wave and wait should have the same dim
         self.wave_state = [] # local state
-        self.wait_state = [] # local state
+        self.accident_info = [] # local state
         self.phase_id = -1
         self.n_a = 0
         self.prev_action = -1
@@ -175,6 +175,7 @@ class TrafficSimulator:
             seed = self.test_seeds[test_ind]
         self._init_sim(seed, gui=gui)
         self.cur_sec = 0
+        self.accident_vehs = []
         self.cur_episode += 1
         # initialize fingerprint
         self.update_fingerprint(self._init_policy())
@@ -191,7 +192,6 @@ class TrafficSimulator:
         state = self._get_state()
         reward = self._measure_reward_step()
         done = False
-        print(state,action)
         if self.cur_sec >= self.episode_length_sec:
             done = True
         global_reward = np.sum(reward)
@@ -215,6 +215,7 @@ class TrafficSimulator:
 
         self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         self.accident_vehs.append(self.accident_veh)
+        self.sim.vehicle.setSpeed(vehID=self.accident_veh, speed=0)
         #     accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         #     veh_edge = self.sim.vehicle.getRoadID(accident_veh)
         #     veh_route = self.sim.vehicle.getRoute(accident_veh)
@@ -291,9 +292,9 @@ class TrafficSimulator:
                     for nnode_name in node.neighbor:
                         cur_state.append(self.nodes[nnode_name].fingerprint)
 
-                # include wait state
-                if 'wait' in self.state_names:
-                    cur_state.append(node.wait_state)
+                # include accident info
+                if 'accident' in self.state_names:
+                    cur_state.append(node.accident_info)
                 state.append(np.concatenate(cur_state))
         return state
 
@@ -432,11 +433,11 @@ class TrafficSimulator:
         for node_name in self.node_names:
             node = self.nodes[node_name]
             num_wave = node.num_state
-            num_wait = 0 if 'wait' not in self.state_names else node.num_state
+            num_accident = 0 if 'accident' not in self.state_names else node.num_state
             if not self.agent.startswith('ma2c'):
                 for nnode_name in node.neighbor:
                     num_wave += self.nodes[nnode_name].num_state
-            self.n_s_ls.append(num_wait + num_wave)
+            self.n_s_ls.append(num_accident + num_wave)
 
     def _measure_reward_step(self):
 
@@ -512,9 +513,20 @@ class TrafficSimulator:
                     if self.name == 'atsc_real_net':
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
                         cur_queue = min(cur_queue, QUEUE_MAX)
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild[0])
+                        for vehID in vehIDs:
+                            if vehID in self.accident_vehs:
+                                cur_queue = cur_queue - 1
+                            else:
+                                cur_queue = cur_queue
                     else:
-                        queue_length = self.sim.lane.getLastStepHaltingNumber(ild)
-                        cur_queue = 1 if queue_length >= (int(self.sim.lane.getLength(ild)/7)-1) else 0
+                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        for vehID in vehIDs:
+                            if vehID in self.accident_vehs:
+                                cur_queue = cur_queue - 1
+                            else:
+                                cur_queue = cur_queue
                     queues.append(cur_queue)
                 if self.obj in ['wait', 'hybrid']:
                     max_pos = 0
@@ -529,8 +541,8 @@ class TrafficSimulator:
                             max_pos = car_pos
                             car_wait = self.sim.vehicle.getWaitingTime(vid)
                     waits.append(car_wait)
-            queue = centrality[node_name] * np.sum(np.array(queues)) if len(queues) else 0
-            wait = centrality[node_name] * np.sum(np.array(waits)) if len(waits) else 0
+            queue = centrality[node_name] * np.mean(np.array(queues)) if len(queues) else 0
+            wait = centrality[node_name] * np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
             elif self.obj == 'wait':
@@ -551,12 +563,6 @@ class TrafficSimulator:
                             cur_wave = 0
                             for ild_seg in ild:
                                 cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
-                                vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
-                                for vehID in vehIDs:
-                                    if self.sim.vehicle.getStopState(vehID) == 1:
-                                        cur_wave = cur_wave + node.lanes_capacity[k]
-                                    else:
-                                        cur_wave = cur_wave
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
 
@@ -570,6 +576,31 @@ class TrafficSimulator:
                                     cur_wave = cur_wave
                         cur_state.append(cur_wave)
                     cur_state = np.array(cur_state)
+                elif state_name == 'accident':
+                    cur_state = []
+                    if self.name == 'atsc_real_net':
+                        for ild_seg in ild:
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
+                            flag = False
+                            for vehID in vehIDs:
+                                if vehID in self.accident_vehs:
+                                    flag = True
+                            if flag:
+                                cur_state.append(1)
+                            else:
+                                cur_state.append(0)
+                    else:
+                        for ild in node.ilds_in:
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                            flag = False
+                            for vehID in vehIDs:
+                                if vehID in self.accident_vehs:
+                                    flag = True
+                            if flag:
+                                cur_state.append(1)
+                            else:
+                                cur_state.append(0)
+                    node.accident_info = np.array(cur_state)
                 elif state_name == 'wait':
                     cur_state = []
                     for ild in node.ilds_in:
@@ -589,13 +620,12 @@ class TrafficSimulator:
                 if self.record_stats:
                     self.state_stat[state_name] += list(cur_state)
                 # normalization
-                norm_cur_state = self._norm_clip_state(cur_state,
+                if state_name == 'wave':
+                    norm_cur_state = self._norm_clip_state(cur_state,
                                                        self.norms[state_name],
                                                        self.clips[state_name])
                 if state_name == 'wave':
                     node.wave_state = norm_cur_state
-                else:
-                    node.wait_state = norm_cur_state
 
     def _measure_traffic_step(self):
         cars = self.sim.vehicle.getIDList()
