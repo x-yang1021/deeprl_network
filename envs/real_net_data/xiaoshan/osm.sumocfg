@@ -6,9 +6,10 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="osm.net.xml"/>
-        <route-files value="osm.passenger.trips.xml"/>
-        <additional-files value="osm.poly.xml"/>
+        <net-file value="xiaoshan.net.xml"/>
+        <!-- <route-files value="osm.passenger.trips.xml"/> -->
+        <route-files value="output.trips.xml"/>
+        <!-- <additional-files value="osm.poly.xml"/> -->
     </input>
 
     <processing>
