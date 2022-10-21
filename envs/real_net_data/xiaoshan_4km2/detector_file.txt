@@ -1,0 +1,4 @@
+<detectors>
+    <detectorDefinition id="d1" lane="532529595#6_1" pos="0"/>
+    <detectorDefinition id="d2" lane="580853946#7_1" pos="0"/>
+</detectors>
