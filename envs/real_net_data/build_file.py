@@ -112,7 +112,7 @@ def output_config(thread=None):
         out_file = 'most_%d.rou.xml' % int(thread)
     str_config = '<configuration>\n  <input>\n'
     str_config += '    <net-file value="xiaoshan/xiaoshan.net.xml"/>\n'
-    str_config += '    <route-files value="xiaoshan/xiaoshan.trips.xml"/>\n'
+    str_config += '    <route-files value="xiaoshan/xiaoshan3.trips.xml"/>\n'
     # str_config += '    <additional-files value="in/most.add.xml"/>\n'
     str_config += '  </input>\n  <time>\n'
     str_config += '    <begin value="0"/>\n    <end value="3600"/>\n'

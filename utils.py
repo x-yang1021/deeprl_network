@@ -9,12 +9,12 @@ import subprocess
 import traci
 from scipy import stats
 
-data = pd.read_excel(r'/Home/Documents/GitHub/deeprl_network/envs/real_net_data/accident data.xlsx')
+data = pd.read_excel(r'./envs/real_net_data/accident data.xlsx')
 df = pd.DataFrame(data, columns=['alert_time'])
-time = pd.DataFrame()
-time['date'] = df['alert_time'].dt.date
-time['hour'] = df['alert_time'].dt.hour
-time['minute'] = df['alert_time'].dt.minute
+accident_time = pd.DataFrame()
+accident_time['date'] = df['alert_time'].dt.date
+accident_time['hour'] = df['alert_time'].dt.hour
+accident_time['minute'] = df['alert_time'].dt.minute
 
 def check_dir(cur_dir):
     if not os.path.exists(cur_dir):
@@ -173,9 +173,9 @@ class Trainer():
     def explore(self, prev_ob, prev_done):
         ob = prev_ob
         done = prev_done
-        a = np.random.choice(time['date'].unique())
+        a = np.random.choice(accident_time['date'].unique())
         a = [a]
-        hour = time.loc[time['date'].isin(a)]
+        hour = accident_time.loc[accident_time['date'].isin(a)]
 
         b = np.random.choice(hour['hour'].unique())
         b = [b]

@@ -1,7 +1,7 @@
 <configuration>
   <input>
     <net-file value="xiaoshan/xiaoshan.net.xml"/>
-    <route-files value="xiaoshan/xiaoshan.trips.xml"/>
+    <route-files value="xiaoshan/xiaoshan3.trips.xml"/>
   </input>
   <time>
     <begin value="0"/>
