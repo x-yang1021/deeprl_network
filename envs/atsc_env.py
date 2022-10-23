@@ -376,7 +376,7 @@ class TrafficSimulator:
         command += ['--seed', str(seed)]
         command += ['--remote-port', str(self.port)]
         command += ['--no-step-log', 'True']
-        command += ['--time-to-teleport', '900'] # long teleport for safety
+        command += ['--time-to-teleport', '600'] # long teleport for safety
         command += ['--no-warnings', 'True']
         command += ['--duration-log.disable', 'True']
         # collect trip info if necessary
@@ -516,14 +516,15 @@ class TrafficSimulator:
             for ild in self.nodes[node_name].ilds_in:
                 if self.obj in ['queue', 'hybrid']:
                     if self.name == 'atsc_real_net':
-                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
-                        cur_queue = min(cur_queue, QUEUE_MAX)
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild[0])
-                        for vehID in vehIDs:
-                            if vehID in self.accident_vehs:
-                                cur_queue = cur_queue - 1
-                            else:
-                                cur_queue = cur_queue
+                        cur_queue = 0
+                        for ild_seg in ild:
+                            cur_queue += self.sim.lane.getLastStepVehicleNumber(ild_seg)
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
+                            for vehID in vehIDs:
+                                if vehID in self.accident_vehs:
+                                    cur_queue = cur_queue - 1
+                                else:
+                                    cur_queue = cur_queue
                     else:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                         vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
@@ -567,7 +568,7 @@ class TrafficSimulator:
                         if self.name == 'atsc_real_net':
                             cur_wave = 0
                             for ild_seg in ild:
-                                cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
+                            	cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
 
