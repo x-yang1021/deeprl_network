@@ -341,12 +341,12 @@ class TrafficSimulator:
             lanes_cap = []
             for lane_name in lanes_in:
                 if self.name == 'atsc_real_net':
-                    cur_ilds_in = lane_name
+                    cur_ilds_in = [lane_name]
                     ilds_in.append(cur_ilds_in)
                     cur_cap = 0
-                    for ild in ilds_in:
-                        cur_cap = self.sim.lane.getLength(ild)
-                    lanes_cap.append(cur_cap/float(VEH_LEN_M))
+                    for ild_name in cur_ilds_in:
+                        cur_cap += self.sim.lane.getLength(ild_name)
+                    lanes_cap.append(cur_cap / float(VEH_LEN_M))
                 else:
                     ilds_in.append(lane_name)
             nodes[node_name].ilds_in = ilds_in
@@ -368,6 +368,8 @@ class TrafficSimulator:
 
     def _init_sim(self, seed, gui=False):
         sumocfg_file = self._init_sim_config(seed)
+        teleport_range = np.linspace(900, 1200, 7)
+        teleport_time = np.random.choice(teleport_range)
         if gui:
             app = 'sumo-gui'
         else:
@@ -376,7 +378,7 @@ class TrafficSimulator:
         command += ['--seed', str(seed)]
         command += ['--remote-port', str(self.port)]
         command += ['--no-step-log', 'True']
-        command += ['--time-to-teleport', '600'] # long teleport for safety
+        command += ['--time-to-teleport', '%d'%teleport_time] # long teleport for safety
         command += ['--no-warnings', 'True']
         command += ['--duration-log.disable', 'True']
         # collect trip info if necessary
@@ -516,8 +518,9 @@ class TrafficSimulator:
             for ild in self.nodes[node_name].ilds_in:
                 if self.obj in ['queue', 'hybrid']:
                     if self.name == 'atsc_real_net':
-                        cur_queue = self.sim.lane.getLastStepVehicleNumber(ild)
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
+                        cur_queue = min(cur_queue, QUEUE_MAX)
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild[0])
                         for vehID in vehIDs:
                             if vehID in self.accident_vehs:
                                 cur_queue = cur_queue - 1
@@ -564,7 +567,9 @@ class TrafficSimulator:
                     cur_state = []
                     for k, ild in enumerate(node.ilds_in):
                         if self.name == 'atsc_real_net':
-                            cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
+                            cur_wave = 0
+                            for ild_seg in ild:
+                                cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
 
@@ -581,15 +586,16 @@ class TrafficSimulator:
                 elif state_name == 'accident':
                     cur_state = []
                     if self.name == 'atsc_real_net':
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                        flag = False
-                        for vehID in vehIDs:
-                            if vehID in self.accident_vehs:
-                                flag = True
-                        if flag:
-                            cur_state.append(1)
-                        else:
-                            cur_state.append(0)
+                        for ild_seg in ild:
+                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
+                            flag = False
+                            for vehID in vehIDs:
+                                if vehID in self.accident_vehs:
+                                    flag = True
+                            if flag:
+                                cur_state.append(1)
+                            else:
+                                cur_state.append(0)
                     else:
                         for ild in node.ilds_in:
                             vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
