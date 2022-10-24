@@ -516,15 +516,13 @@ class TrafficSimulator:
             for ild in self.nodes[node_name].ilds_in:
                 if self.obj in ['queue', 'hybrid']:
                     if self.name == 'atsc_real_net':
-                        cur_queue = 0
-                        for ild_seg in ild:
-                            cur_queue += self.sim.lane.getLastStepVehicleNumber(ild_seg)
-                            vehIDs = self.sim.lane.getLastStepVehicleIDs(ild_seg)
-                            for vehID in vehIDs:
-                                if vehID in self.accident_vehs:
-                                    cur_queue = cur_queue - 1
-                                else:
-                                    cur_queue = cur_queue
+                        cur_queue += self.sim.lane.getLastStepVehicleNumber(ild)
+                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                        for vehID in vehIDs:
+                            if vehID in self.accident_vehs:
+                                cur_queue = cur_queue - 1
+                            else:
+                                cur_queue = cur_queue
                     else:
                         cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
                         vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
