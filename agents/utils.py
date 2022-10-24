@@ -802,7 +802,7 @@ class OnPolicyBuffer(TransBuffer):
         self.obs.append(ob)
         self.adds.append(na)
         self.acts.append(a)
-        self.rs.append(r)
+        self.rs.append(r/np.std(self.rs))
         self.vs.append(v)
         self.dones.append(done)
 
