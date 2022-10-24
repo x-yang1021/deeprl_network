@@ -341,7 +341,7 @@ class TrafficSimulator:
             lanes_cap = []
             for lane_name in lanes_in:
                 if self.name == 'atsc_real_net':
-                    cur_ilds_in = [lane_name]
+                    cur_ilds_in = lane_name
                     ilds_in.append(cur_ilds_in)
                     cur_cap = 0
                     for ild_name in cur_ilds_in:
@@ -566,9 +566,7 @@ class TrafficSimulator:
                     cur_state = []
                     for k, ild in enumerate(node.ilds_in):
                         if self.name == 'atsc_real_net':
-                            cur_wave = 0
-                            for ild_seg in ild:
-                            	cur_wave += self.sim.lane.getLastStepVehicleNumber(ild_seg)
+                            cur_wave = self.sim.lane.getLastStepVehicleNumber(ild)
                             cur_wave /= node.lanes_capacity[k]
                             # cur_wave = min(1.5, cur_wave / QUEUE_MAX)
 
