@@ -344,8 +344,8 @@ class TrafficSimulator:
                     cur_ilds_in = lane_name
                     ilds_in.append(cur_ilds_in)
                     cur_cap = 0
-                    for ild_name in cur_ilds_in:
-                        cur_cap += self.sim.lane.getLength(ild_name)
+                    for ild in ilds_in:
+                        cur_cap = self.sim.lane.getLength(ild)
                     lanes_cap.append(cur_cap/float(VEH_LEN_M))
                 else:
                     ilds_in.append(lane_name)
