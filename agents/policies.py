@@ -250,7 +250,7 @@ class NCMultiAgentPolicy(Policy):
             entropy = tf.concat(entropy, axis=0)
             prob_pi = tf.concat(prob_pi, axis=0)
         entropy_loss = -tf.reduce_sum(tf.reduce_mean(entropy, axis=-1)) * e_coef
-        policy_loss = -tf.reduce_sum(tf.reduce_mean(prob_pi * self.ADV, axis=-1))
+        policy_loss = -tf.reduce_sum(tf.reduce_mean(prob_pi * self.ADV, axis=-1)) * 0.05
         value_loss = tf.reduce_sum(tf.reduce_mean(tf.square(self.R - self.v), axis=-1)) * v_coef
         self.loss = policy_loss + value_loss + entropy_loss
 
