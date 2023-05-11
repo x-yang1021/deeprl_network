@@ -22,22 +22,22 @@ node_names = []
 
 node_names += ['nt%d' % i for i in range(1, 26)]
 
-G = nx.Graph()
-
-G.add_nodes_from(node_names)
-
-G.add_edges_from([
-    ('nt1','nt6'),('nt6','nt11'),('nt11','nt16'),('nt16','nt21'),
-    ('nt1','nt2'),('nt6','nt7'),('nt11','nt12'),('nt16','nt17'),('nt22','nt21'),
-    ('nt7','nt2'),('nt12','nt7'),('nt17','nt12'),('nt22','nt17'),
-    ('nt3','nt2'),('nt8','nt7'),('nt13','nt12'),('nt18','nt17'),('nt22','nt23'),
-    ('nt3','nt8'),('nt8','nt13'),('nt13','nt18'),('nt18','nt23'),
-    ('nt3','nt4'),('nt8','nt9'),('nt13','nt14'),('nt18','nt19'),('nt24','nt23'),
-    ('nt9','nt4'),('nt14','nt9'),('nt19','nt14'),('nt24','nt19'),
-    ('nt5','nt4'),('nt10','nt9'),('nt15','nt14'),('nt20','nt19'),('nt24','nt25'),
-    ('nt5','nt10'),('nt10','nt15'),('nt15','nt20'),('nt20','nt25')
-               ])
-centrality = nx.closeness_centrality(G)
+# G = nx.Graph()
+#
+# G.add_nodes_from(node_names)
+#
+# G.add_edges_from([
+#     ('nt1','nt6'),('nt6','nt11'),('nt11','nt16'),('nt16','nt21'),
+#     ('nt1','nt2'),('nt6','nt7'),('nt11','nt12'),('nt16','nt17'),('nt22','nt21'),
+#     ('nt7','nt2'),('nt12','nt7'),('nt17','nt12'),('nt22','nt17'),
+#     ('nt3','nt2'),('nt8','nt7'),('nt13','nt12'),('nt18','nt17'),('nt22','nt23'),
+#     ('nt3','nt8'),('nt8','nt13'),('nt13','nt18'),('nt18','nt23'),
+#     ('nt3','nt4'),('nt8','nt9'),('nt13','nt14'),('nt18','nt19'),('nt24','nt23'),
+#     ('nt9','nt4'),('nt14','nt9'),('nt19','nt14'),('nt24','nt19'),
+#     ('nt5','nt4'),('nt10','nt9'),('nt15','nt14'),('nt20','nt19'),('nt24','nt25'),
+#     ('nt5','nt10'),('nt10','nt15'),('nt15','nt20'),('nt20','nt25')
+#                ])
+# centrality = nx.closeness_centrality(G)
 
 
 class PhaseSet:
@@ -213,7 +213,7 @@ class TrafficSimulator:
         done = False
         if self.cur_sec >= self.episode_length_sec:
             done = True
-        global_reward = np.sum(reward)
+        global_reward = np.std(reward)
         if self.is_record:
             action_r = ','.join(['%d' % a for a in action])
             cur_control = {'episode': self.cur_episode,
@@ -303,7 +303,7 @@ class TrafficSimulator:
             if self.agent == 'greedy':
                 state.append(node.wave_state)
             else:
-                cur_state =[node.wave_state]
+                cur_state = [node.wave_state]
 
                 # include wave states of neighbors
                 if self.agent.startswith('ia2c'):
@@ -452,12 +452,12 @@ class TrafficSimulator:
                     else:
                         cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
                     for vid in cur_cars:
-                        if vehID in self.accident_vehs:
+                        if vid in self.accident_vehs:
                             waits.append(0)
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
-            queue = centrality[node_name] * np.mean(np.array(queues)) if len(queues) else 0
-            wait = centrality[node_name] * np.mean(np.array(waits)) if len(waits) else 0
+            queue = np.mean(np.array(queues)) if len(queues) else 0
+            wait = np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
                 reward = - queue
             elif self.obj == 'wait':

@@ -192,13 +192,13 @@ def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCAL
             ci = ci * (1-done)
             hi = hi * (1-done)
             # receive neighbor messages
-            loss_packet = []
-            for j in range(n_agent):
-                d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
-                loss_packet.append(d.tolist())
-            loss_packet = np.array(loss_packet)
-            mi = tf.multiply(out_m, loss_packet)
-            mi = tf.boolean_mask(mi, masks[i])
+            # loss_packet = []
+            # for j in range(n_agent):
+            #     d = np.squeeze(np.random.choice(a=[1, 0], size=(1, n_h), p=[loss_rate[i, j], 1 - loss_rate[i, j]]))
+            #     loss_packet.append(d.tolist())
+            # loss_packet = np.array(loss_packet)
+            # mi = tf.multiply(out_m, loss_packet)
+            mi = tf.boolean_mask(out_m, masks[i])
             mi = tf.expand_dims(tf.reshape(mi,[-1]), axis=0)
             pi = tf.expand_dims(tf.reshape(tf.boolean_mask(p, masks[i]), [-1]), axis=0)
             xi = tf.expand_dims(tf.reshape(tf.boolean_mask(x, masks[i]), [-1]), axis=0)
@@ -227,7 +227,7 @@ def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCAL
     return xs, s
 
 
-def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
+def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=DEFAULT_SCALE,
                      init_mode=DEFAULT_MODE, init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
@@ -316,13 +316,14 @@ def lstm_comm_hetero(xs, ps, dones, masks, loss_rate, s, n_s_ls, n_a_ls, scope, 
             pi = []
             xi = [tf.slice(x, [i, 0], [1, n_s_ls[i]])]
             if n_m:
-                for j in range(n_h):
-                    N = n_h
-                    d = []
-                    loss_packet = []
-                    d = np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]])
-                    loss_packet.append(d)
-                mi = tf.expand_dims(tf.reshape(tf.multiply(out_m, loss_packet), [-1]), axis=0)
+                # for j in range(n_h):
+                #     N = n_h
+                #     d = []
+                #     loss_packet = []
+                #     d = np.random.choice(a=[1, 0], size=(1, N), p=[loss_rate[i, j], 1 - loss_rate[i, j]])
+                #     loss_packet.append(d)
+                # mi = tf.expand_dims(tf.reshape(tf.multiply(out_m, loss_packet), [-1]), axis=0)
+                mi = tf.expand_dims(tf.reshape(tf.boolean_mask(out_m, masks[i]), [-1]), axis=0)
                 raw_pi = tf.boolean_mask(p, masks[i]) # n_n*n_a
                 raw_xi = tf.boolean_mask(x, masks[i])
                 # find the valid information based on each agent's s, a dim

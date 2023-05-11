@@ -62,7 +62,7 @@ def init_agent(env, config, total_step, seed):
         return IA2C_FP(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
                        total_step, config, seed=seed)
     elif env.agent == 'ma2c_nc':
-        return MA2C_NC(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.loss_rate, env.distance_mask, env.coop_gamma,
+        return MA2C_NC(env.n_s_ls, env.n_a_ls, env.neighbor_mask, env.distance_mask, env.coop_gamma,
                        total_step, config, seed=seed)
     elif env.agent == 'ma2c_ic3':
         # this is actually CommNet

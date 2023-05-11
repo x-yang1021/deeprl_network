@@ -81,7 +81,7 @@ class IA2C:
     def save(self, model_dir, global_step):
         self.saver.save(self.sess, model_dir + 'checkpoint', global_step=global_step)
 
-    def _init_algo(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
+    def _init_algo(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
                    total_step, seed, model_config):
         # init params
         self.n_s_ls = n_s_ls
@@ -96,7 +96,6 @@ class IA2C:
             self.n_s = max(self.n_s_ls)
             self.n_a = max(self.n_a_ls)
         self.neighbor_mask = neighbor_mask
-        self.loss_rate = loss_rate
         self.n_agent = len(self.neighbor_mask)
         self.reward_clip = model_config.getfloat('reward_clip')
         self.reward_norm = model_config.getfloat('reward_norm')
@@ -190,10 +189,10 @@ class IA2C_FP(IA2C):
 
 
 class MA2C_NC(IA2C):
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ma2c_nc'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, p, action, reward, value, done):
@@ -238,7 +237,7 @@ class MA2C_NC(IA2C):
     def _init_policy(self):
         if self.identical_agent:
             return NCMultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
-                                      self.neighbor_mask, self.loss_rate, n_fc=self.n_fc, n_h=self.n_lstm)
+                                      self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm)
         else:
             return NCMultiAgentPolicy(self.n_s, self.n_a, self.n_agent, self.n_step,
                                       self.neighbor_mask, n_fc=self.n_fc, n_h=self.n_lstm,

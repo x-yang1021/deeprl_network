@@ -192,7 +192,7 @@ class Trainer():
                 logging.info('''Training: global step %d, episode step %d,
                                    ob: %s, a: %s, pi: %s, r: %.2f, train r: %.2f, done: %r''' %
                              (global_step, self.cur_step,
-                              str(ob), str(action), str(policy), global_reward, np.sum(reward), done))
+                              str(ob), str(action), str(policy), global_reward, np.std(reward), done))
             # terminal check must be inside batch loop for CACC env
             if done:
                 break
@@ -251,7 +251,7 @@ class Trainer():
                     self.env.terminate()
                     break
             rewards = np.array(self.episode_rewards)
-            mean_reward = np.sum(rewards)
+            mean_reward = np.mean(rewards)
             std_reward = np.std(rewards)
             # NOTE: for CACC we have to run another testing episode after each
             # training episode since the reward and policy settings are different!
