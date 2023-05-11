@@ -213,7 +213,7 @@ class TrafficSimulator:
         done = False
         if self.cur_sec >= self.episode_length_sec:
             done = True
-        global_reward = np.std(reward)
+        global_reward = - np.std(reward)
         if self.is_record:
             action_r = ','.join(['%d' % a for a in action])
             cur_control = {'episode': self.cur_episode,
@@ -459,7 +459,7 @@ class TrafficSimulator:
             queue = np.mean(np.array(queues)) if len(queues) else 0
             wait = np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
-                reward = - queue
+                reward = 1/queue
             elif self.obj == 'wait':
                 reward = - wait
             else:
