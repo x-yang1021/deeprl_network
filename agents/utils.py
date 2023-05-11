@@ -118,7 +118,7 @@ def lstm(xs, dones, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
     return seq_to_batch(xs), tf.squeeze(s)
 
 
-def lstm_comm(xs, ps, dones, masks, loss_rate, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
+def lstm_comm(xs, ps, dones, masks, s, scope, init_scale=DEFAULT_SCALE, init_mode=DEFAULT_MODE,
               init_method=DEFAULT_METHOD):
     n_agent = s.shape[0]
     n_h = s.shape[1] // 2
