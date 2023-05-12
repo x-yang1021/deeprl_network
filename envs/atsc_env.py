@@ -459,7 +459,7 @@ class TrafficSimulator:
             queue = np.mean(np.array(queues)) if len(queues) else 0
             wait = np.mean(np.array(waits)) if len(waits) else 0
             if self.obj == 'queue':
-                reward = 1/queue
+                reward = queue
             elif self.obj == 'wait':
                 reward = - wait
             else:
