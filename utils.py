@@ -175,8 +175,8 @@ class Trainer():
             # transition
             self.env.update_fingerprint(policy)
             next_ob, reward, done, global_reward = self.env.step(action)
-            if self.cur_step in self.accident_step:
-                    self.env.accident()
+            # if self.cur_step in self.accident_step:
+            #         self.env.accident()
             # if self.cur_step in self.accident_step:
             #     self.env.accident()
             self.episode_rewards.append(global_reward)

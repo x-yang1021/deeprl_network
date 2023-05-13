@@ -17,7 +17,7 @@ import traci
 sns.set_color_codes()
 
 
-STATE_NAMES = ['wave', 'accident']
+STATE_NAMES = ['wave']
 PHASE_NUM = 6
 
 
