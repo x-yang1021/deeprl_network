@@ -10,7 +10,8 @@ from sumolib import checkBinary
 import time
 import traci
 import xml.etree.cElementTree as ET
-import networkx as nx
+from scipy.spatial import distance
+import vectormath as vmath
 
 DEFAULT_PORT = 8813
 SEC_IN_MS = 1000
@@ -213,7 +214,7 @@ class TrafficSimulator:
         done = False
         if self.cur_sec >= self.episode_length_sec:
             done = True
-        global_reward = - np.mean(reward)
+        global_reward = reward
         if self.is_record:
             action_r = ','.join(['%d' % a for a in action])
             cur_control = {'episode': self.cur_episode,
@@ -428,44 +429,116 @@ class TrafficSimulator:
             self.n_s_ls.append(num_accident + num_wave)
 
     def _measure_reward_step(self):
-        rewards = []
-        for node_name in self.node_names:
-            queues = []
-            waits = []
-            for ild in self.nodes[node_name].ilds_in:
-                if self.obj in ['queue', 'hybrid']:
-                    if self.name == 'atsc_real_net':
-                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
-                        cur_queue = min(cur_queue, QUEUE_MAX)
-                    else:
-                        cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
-                        vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
-                        for vehID in vehIDs:
-                            if vehID in self.accident_vehs:
-                                cur_queue = cur_queue - 1
-                            else:
-                                cur_queue = cur_queue
-                    queues.append(cur_queue)
-                if self.obj in ['wait', 'hybrid']:
-                    if self.name == 'atsc_real_net':
-                        cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
-                    else:
-                        cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
-                    for vid in cur_cars:
-                        if vid in self.accident_vehs:
-                            waits.append(0)
-                        else:
-                            waits.append(self.sim.vehicle.getWaitingTime(vid))
-            queue = np.mean(np.array(queues)) if len(queues) else 0
-            wait = np.mean(np.array(waits)) if len(waits) else 0
-            if self.obj == 'queue':
-                reward = queue
-            elif self.obj == 'wait':
-                reward = - wait
-            else:
-                reward = - queue - wait
-            rewards.append(reward)
-        return np.array(rewards)
+        # rewards = []
+        # for node_name in self.node_names:
+        #     queues = []
+        #     waits = []
+        #     for ild in self.nodes[node_name].ilds_in:
+        #         if self.obj in ['queue', 'hybrid']:
+        #             if self.name == 'atsc_real_net':
+        #                 cur_queue = self.sim.lane.getLastStepHaltingNumber(ild[0])
+        #                 cur_queue = min(cur_queue, QUEUE_MAX)
+        #             else:
+        #                 cur_queue = self.sim.lane.getLastStepHaltingNumber(ild)
+        #                 vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+        #                 for vehID in vehIDs:
+        #                     if vehID in self.accident_vehs:
+        #                         cur_queue = cur_queue - 1
+        #                     else:
+        #                         cur_queue = cur_queue
+        #             queues.append(cur_queue)
+        #         if self.obj in ['wait', 'hybrid']:
+        #             if self.name == 'atsc_real_net':
+        #                 cur_cars = self.sim.lane.getLastStepVehicleIDs(ild[0])
+        #             else:
+        #                 cur_cars = self.sim.lane.getLastStepVehicleIDs(ild)
+        #             for vid in cur_cars:
+        #                 if vid in self.accident_vehs:
+        #                     waits.append(0)
+        #                 else:
+        #                     waits.append(self.sim.vehicle.getWaitingTime(vid))
+        #     queue = np.mean(np.array(queues)) if len(queues) else 0
+        #     wait = np.mean(np.array(waits)) if len(waits) else 0
+        #     if self.obj == 'queue':
+        #         reward = queue
+        #     elif self.obj == 'wait':
+        #         reward = - wait
+        #     else:
+        #         reward = - queue - wait
+        #     rewards.append(reward)
+        # return np.array(rewards)
+        rewards = np.mean(self.get_risk_index())
+        return rewards
+
+    def get_risk_index(self):
+        edges = self.sim.edge.getIDList()
+        edge_veh = {}
+        risk_indices = []
+        veh_width = 1.8
+        veh_length = 5
+        for edge in edges:
+            edge_veh[edge] = self.sim.edge.getLastStepVehicleIDs(edge)
+        for key in edge_veh:
+            veh_pos = {}
+            veh_forward = {}
+            veh_acc = {}
+            for veh in edge_veh[key]:
+                veh_pos[veh] = self.sim.vehicle.getPosition(veh)
+                veh_forward[veh] = self.sim.vehicle.getAngle(veh)
+                # veh_acc[veh] = self.sim.vehicle.getAcceleration(veh)
+            for ego in edge_veh[key]:
+                ego_position = vmath.Vector2Array(veh_pos[ego])
+                ego_forward_angle = np.deg2rad(veh_forward[ego])
+                #convert into vector
+                ego_forward = vmath.Vector2Array((round(np.cos(ego_forward_angle),5), round(np.sin(ego_forward_angle),5)))
+                ego_right_angle = np.deg2rad(veh_forward[ego] + 90)
+                # ego_left_angle = np.deg2rad(veh_forward[ego] -90)
+                ego_left = vmath.Vector2Array((round(np.cos(ego_right_angle), 5), round(np.sin(ego_right_angle), 5)))
+                # ego_right = (round(np.cos(ego_left_angle), 5), round(np.sin(ego_left_angle), 5))
+                front = rear = left = right = None
+                #set up intial threshold
+                front_dis = left_dis = 10
+                rear_dis = right_dis = 0
+                for traffic in edge_veh[key]:
+                    traffic_positon = vmath.Vector2Array(veh_pos[traffic])
+                    veh_distance = ego_position - traffic_positon
+                    longi_dis = veh_distance.dot(ego_forward)
+                    lat_dis = veh_distance.dot(ego_left)
+                    if longi_dis > 0 and np.abs(longi_dis) <= 1.5 * veh_width:
+                        if front is None or longi_dis < front_dis:
+                            front = traffic
+                            front_dis = longi_dis
+                    elif longi_dis < 0 and np.abs(longi_dis) <= 1.5 * veh_width:
+                        if rear is None or longi_dis > rear_dis:
+                            rear = traffic
+                            rear_dis = longi_dis
+                    if lat_dis > 0 and np.abs(lat_dis) <= 1.5 * veh_length:
+                        if left is None or lat_dis < left_dis:
+                            left = traffic
+                            left_dis = lat_dis
+                    elif lat_dis < 0 and np.abs(lat_dis) <= 1.5 * veh_length:
+                        if right is None or lat_dis > right_dis:
+                            right = traffic
+                            right_dis = lat_dis
+                ego_speed = self.sim.vehicle.getSpeed(ego)
+                front_speed = self.sim.vehicle.getSpeed(front)
+                rear_speed = self.sim.vehicle.getSpeed(rear)
+                left_speed = self.sim.vehicle.getSpeed(left)
+                right_speed = self.sim.vehicle.getSpeed(right)
+                ttc_front = self.ttc(front_dis, front_speed, ego_speed, veh_length)
+                ttc_rear = self.ttc(-rear_dis, ego_speed, rear_speed, veh_length)
+                ttc_left = self.ttc(left_dis, left_speed, ego_speed, veh_width)
+                ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
+                ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
+                risk_indices.append(ttc)
+        return risk_indices
+
+    def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
+        ttc_index = (dis-veh_metric)/(traffic_speed - ego_speed)
+        return ttc_index
+
+
+
 
     def _measure_state_step(self):
         for node_name in self.node_names:
