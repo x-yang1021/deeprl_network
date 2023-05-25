@@ -545,11 +545,11 @@ class TrafficSimulator:
         return risk_indices
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
-        ttc_index = (dis-veh_metric)/(traffic_speed - ego_speed)
-        return ttc_index
-
-
-
+        if traffic_speed - ego_speed == 0:
+            return 0
+        else:
+            ttc_index = (dis-veh_metric)/(traffic_speed - ego_speed)
+            return ttc_index
 
     def _measure_state_step(self):
         for node_name in self.node_names:
