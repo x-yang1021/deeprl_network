@@ -521,16 +521,27 @@ class TrafficSimulator:
                             right = traffic
                             right_dis = lat_dis
                 ego_speed = self.sim.vehicle.getSpeed(ego)
-                front_speed = self.sim.vehicle.getSpeed(front)
-                rear_speed = self.sim.vehicle.getSpeed(rear)
-                left_speed = self.sim.vehicle.getSpeed(left)
-                right_speed = self.sim.vehicle.getSpeed(right)
-                ttc_front = self.ttc(front_dis, front_speed, ego_speed, veh_length)
-                ttc_rear = self.ttc(-rear_dis, ego_speed, rear_speed, veh_length)
-                ttc_left = self.ttc(left_dis, left_speed, ego_speed, veh_width)
-                ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
+                if front or rear or left or right:
+                    ttc_front = ttc_rear = ttc_left = ttc_right = float('inf')
+                else:
+                    ttc_front = ttc_rear = ttc_left = ttc_right = 0
+                if front:
+                    front_speed = self.sim.vehicle.getSpeed(front)
+                    ttc_front = self.ttc(front_dis, front_speed, ego_speed, veh_length)
+                if rear:
+                    rear_speed = self.sim.vehicle.getSpeed(rear)
+                    ttc_rear = self.ttc(-rear_dis, ego_speed, rear_speed, veh_length)
+                if left:
+                    left_speed = self.sim.vehicle.getSpeed(left)
+                    ttc_left = self.ttc(left_dis, left_speed, ego_speed, veh_width)
+                if right:
+                    right_speed = self.sim.vehicle.getSpeed(right)
+                    ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
-                risk_indices.append(ttc)
+                if ttc == 0:
+                    pass
+                else:
+                    risk_indices.append(ttc)
         return risk_indices
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
