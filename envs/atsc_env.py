@@ -214,7 +214,7 @@ class TrafficSimulator:
         done = False
         if self.cur_sec >= self.episode_length_sec:
             done = True
-        global_reward = reward
+        global_reward = np.mean(reward)
         if self.is_record:
             action_r = ','.join(['%d' % a for a in action])
             cur_control = {'episode': self.cur_episode,
@@ -429,7 +429,7 @@ class TrafficSimulator:
             self.n_s_ls.append(num_accident + num_wave)
 
     def _measure_reward_step(self):
-        # rewards = []
+        rewards = []
         # for node_name in self.node_names:
         #     queues = []
         #     waits = []
@@ -471,12 +471,9 @@ class TrafficSimulator:
         # scaler = MinMaxScaler()
         # risk_inices = risk_inices.reshape(-1, 1)
         # scaler.fit(risk_inices)
-        rewards = np.mean(self.get_risk_index())
-        return rewards
-
-    def get_risk_index(self):
         edges = self.sim.edge.getIDList()
         edge_veh = {}
+        veh_reward = {}
         risk_indices = []
         veh_width = 1.8
         veh_length = 5
@@ -543,8 +540,16 @@ class TrafficSimulator:
                     right_speed = self.sim.vehicle.getSpeed(right)
                     ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
-                risk_indices.append(ttc)
-        return risk_indices
+                veh_reward[veh] = ttc
+        for node_name in self.node_names:
+            node_rewards = []
+            for ild in self.nodes[node_name].ilds_in:
+                vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
+                for vehID in vehIDs:
+                    node_rewards.append(veh_reward[vehID])
+            node_reward = np.mean(node_rewards)
+            rewards.append(node_reward)
+        return rewards
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
         if traffic_speed <= ego_speed:
