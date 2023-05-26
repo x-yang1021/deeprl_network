@@ -467,11 +467,11 @@ class TrafficSimulator:
         #         reward = - queue - wait
         #     rewards.append(reward)
         # return np.array(rewards)
-        risk_inices = np.array(self.get_risk_index())
-        scaler = MinMaxScaler()
-        risk_inices = risk_inices.reshape(-1, 1)
-        scaler.fit(risk_inices)
-        rewards = np.mean(scaler.transform(risk_inices))
+        # risk_inices = np.array(self.get_risk_index())
+        # scaler = MinMaxScaler()
+        # risk_inices = risk_inices.reshape(-1, 1)
+        # scaler.fit(risk_inices)
+        rewards = np.mean(self.get_risk_index())
         return rewards
 
     def get_risk_index(self):
