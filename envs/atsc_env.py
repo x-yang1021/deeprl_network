@@ -548,10 +548,10 @@ class TrafficSimulator:
                 for vehID in vehIDs:
                     node_rewards.append(veh_reward[vehID])
             if node_rewards:
-                node_reward = np.mean(node_rewards)
+                node_rewards = np.mean(node_rewards)
             else:
                 pass
-            rewards.append(node_reward)
+            rewards.append(node_rewards)
         return rewards
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
