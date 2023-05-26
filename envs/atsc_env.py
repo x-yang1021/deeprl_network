@@ -480,6 +480,10 @@ class TrafficSimulator:
         risk_indices = []
         veh_width = 1.8
         veh_length = 5
+        #hard code upper limit of reward
+        max_length = 200
+        min_vel_gap = 0.1
+        self.max_reward = max_length/min_vel_gap
         for edge in edges:
             edge_veh[edge] = self.sim.edge.getLastStepVehicleIDs(edge)
         for key in edge_veh:
@@ -525,10 +529,7 @@ class TrafficSimulator:
                             right = traffic
                             right_dis = lat_dis
                 ego_speed = self.sim.vehicle.getSpeed(ego)
-                if front or rear or left or right:
-                    ttc_front = ttc_rear = ttc_left = ttc_right = float('inf')
-                else:
-                    ttc_front = ttc_rear = ttc_left = ttc_right = 0
+                ttc_front = ttc_rear = ttc_left = ttc_right = self.max_reward
                 if front:
                     front_speed = self.sim.vehicle.getSpeed(front)
                     ttc_front = self.ttc(front_dis, front_speed, ego_speed, veh_length)
@@ -547,9 +548,10 @@ class TrafficSimulator:
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
         if traffic_speed <= ego_speed:
-            ttc_index = float("inf")
+            ttc_index = self.max_reward
         else:
             ttc_index = (dis-veh_metric)/(traffic_speed - ego_speed)
+        ttc_index = np.clip(ttc_index, 0, self.max_reward)
         return ttc_index
 
     def _measure_state_step(self):
