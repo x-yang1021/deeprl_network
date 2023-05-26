@@ -547,10 +547,7 @@ class TrafficSimulator:
                 vehIDs = self.sim.lane.getLastStepVehicleIDs(ild)
                 for vehID in vehIDs:
                     node_rewards.append(veh_reward[vehID])
-            if node_rewards:
-                node_rewards = np.mean(node_rewards)
-            else:
-                pass
+            node_rewards = np.mean(np.array(node_rewards)) if len(node_rewards) else 0
             rewards.append(node_rewards)
         return np.array(rewards)
 
