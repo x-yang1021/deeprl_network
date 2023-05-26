@@ -540,7 +540,7 @@ class TrafficSimulator:
                     right_speed = self.sim.vehicle.getSpeed(right)
                     ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
-                veh_reward[veh] = ttc
+                veh_reward[ego] = ttc
         for node_name in self.node_names:
             node_rewards = []
             for ild in self.nodes[node_name].ilds_in:
