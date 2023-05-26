@@ -10,8 +10,8 @@ from sumolib import checkBinary
 import time
 import traci
 import xml.etree.cElementTree as ET
-from scipy.spatial import distance
 import vectormath as vmath
+from sklearn.preprocessing import MinMaxScaler
 
 DEFAULT_PORT = 8813
 SEC_IN_MS = 1000
@@ -467,7 +467,11 @@ class TrafficSimulator:
         #         reward = - queue - wait
         #     rewards.append(reward)
         # return np.array(rewards)
-        rewards = np.mean(self.get_risk_index())
+        risk_inices = np.array(self.get_risk_index())
+        scaler = MinMaxScaler()
+        risk_inices = risk_inices.reshape(-1, 1)
+        scaler.fit(risk_inices)
+        rewards = np.mean(scaler.transform(risk_inices))
         return rewards
 
     def get_risk_index(self):
@@ -538,18 +542,15 @@ class TrafficSimulator:
                     right_speed = self.sim.vehicle.getSpeed(right)
                     ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
-                if ttc == 0:
-                    pass
-                else:
-                    risk_indices.append(ttc)
+                risk_indices.append(ttc)
         return risk_indices
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
-        if traffic_speed - ego_speed == 0:
-            return 0
+        if traffic_speed <= ego_speed:
+            ttc_index = float("inf")
         else:
             ttc_index = (dis-veh_metric)/(traffic_speed - ego_speed)
-            return ttc_index
+        return ttc_index
 
     def _measure_state_step(self):
         for node_name in self.node_names:
