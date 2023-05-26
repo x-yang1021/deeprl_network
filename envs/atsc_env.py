@@ -552,7 +552,7 @@ class TrafficSimulator:
             else:
                 pass
             rewards.append(node_rewards)
-        return rewards
+        return np.array(rewards)
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
         if traffic_speed <= ego_speed:
