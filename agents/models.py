@@ -196,10 +196,10 @@ class MA2C_NC(IA2C):
                         total_step, seed, model_config)
 
     def add_transition(self, ob, p, action, reward, value, done):
-        if self.reward_norm > 0:
-            reward = reward / self.reward_norm
-        if self.reward_clip > 0:
-            reward = np.clip(reward, -self.reward_clip, self.reward_clip)
+        # if self.reward_norm > 0:
+        #     reward = reward / self.reward_norm
+        # if self.reward_clip > 0:
+        #     reward = np.clip(reward, -self.reward_clip, self.reward_clip)
         if self.identical_agent:
             self.trans_buffer.add_transition(np.array(ob), np.array(p), action,
                                              reward, value, done)
