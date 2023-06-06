@@ -24,10 +24,10 @@ class IA2C:
                         total_step, seed, model_config)
 
     def add_transition(self, ob, naction, action, reward, value, done):
-        if self.reward_norm > 0:
-            reward = reward / self.reward_norm
-        if self.reward_clip > 0:
-            reward = np.clip(reward, -self.reward_clip, self.reward_clip)
+        # if self.reward_norm > 0:
+        #     reward = reward / self.reward_norm
+        # if self.reward_clip > 0:
+        #     reward = np.clip(reward, -self.reward_clip, self.reward_clip)
         for i in range(self.n_agent):
             self.trans_buffer[i].add_transition(ob[i], naction[i], action[i], reward, value[i], done)
 
