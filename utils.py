@@ -240,7 +240,7 @@ class Trainer():
             self.cur_step = 0
             self.episode_rewards = []
             num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=720))
-            self.accident_step = np.random.choice(720,num_accident)
+            self.accident_step = np.random.choice(720, num_accident)
             while True:
                 ob, done, R = self.explore(ob, done)
                 dt = self.env.T - self.cur_step
