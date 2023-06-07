@@ -551,7 +551,7 @@ class TrafficSimulator:
         reward_safety_index = scaler.transform(reward_safety_index)
         reward_safety_index = np.mean(reward_safety_index)
         rewards = reward_safety_index + reward_std_queue + reward_avg_queue
-        print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
+        # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
         #     for ild in self.nodes[node_name].ilds_in:

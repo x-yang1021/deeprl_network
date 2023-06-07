@@ -192,7 +192,7 @@ class Trainer():
                 logging.info('''Training: global step %d, episode step %d,
                                    ob: %s, a: %s, pi: %s, r: %.2f, train r: %.2f, done: %r''' %
                              (global_step, self.cur_step,
-                              str(ob), str(action), str(policy), global_reward, np.std(reward), done))
+                              str(ob), str(action), str(policy), global_reward, reward, done))
             # terminal check must be inside batch loop for CACC env
             if done:
                 break
@@ -226,7 +226,7 @@ class Trainer():
             if done:
                 break
             ob = next_ob
-        mean_reward = np.sum(np.array(rewards))
+        mean_reward = np.mean(np.array(rewards))
         std_reward = np.std(np.array(rewards))
         return mean_reward, std_reward
 
