@@ -471,6 +471,7 @@ class TrafficSimulator:
         reward_queue = np.array(reward_queue)
         reward_queue = reward_queue.reshape(-1,1)
         scaler.fit(reward_queue)
+        reward_queue = scaler.transform(reward_queue)
         reward_avg_queue = - np.mean(reward_queue)
         reward_std_queue = - np.std(reward_queue)
         # risk_inices = np.array(self.get_risk_index())
@@ -548,6 +549,7 @@ class TrafficSimulator:
         reward_safety_index = np.array(reward_safety_index)
         reward_safety_index = reward_safety_index.reshape(-1,1)
         scaler.fit(reward_safety_index)
+        reward_safety_index = scaler.transform(reward_safety_index)
         reward_safety_index = np.mean(reward_safety_index)
         rewards = reward_safety_index + reward_std_queue + reward_avg_queue
         # for node_name in self.node_names:
