@@ -469,11 +469,9 @@ class TrafficSimulator:
                 reward = - queue - wait
             reward_queue.append(reward)
         reward_queue = np.array(reward_queue)
-        print("unscaled index", reward_queue)
         reward_queue = reward_queue.reshape(-1,1)
         scaler.fit(reward_queue)
         reward_queue = scaler.transform(reward_queue)
-        print("scaled index", reward_queue)
         reward_avg_queue = - np.mean(reward_queue)
         reward_std_queue = - np.std(reward_queue)
         # risk_inices = np.array(self.get_risk_index())
@@ -546,16 +544,14 @@ class TrafficSimulator:
                     right_speed = self.sim.vehicle.getSpeed(right)
                     ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
-                print("ttc", ttc)
                 reward_safety_index.append(float(ttc))
         reward_safety_index = np.array(reward_safety_index)
-        print("unscaled index", reward_safety_index)
         reward_safety_index = reward_safety_index.reshape(-1,1)
         scaler.fit(reward_safety_index)
         reward_safety_index = scaler.transform(reward_safety_index)
-        print("scaled index", reward_safety_index)
         reward_safety_index = np.mean(reward_safety_index)
         rewards = reward_safety_index + reward_std_queue + reward_avg_queue
+        print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
         #     for ild in self.nodes[node_name].ilds_in:
