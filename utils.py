@@ -119,6 +119,9 @@ class Trainer():
 
     def _init_summary(self):
         self.train_reward = tf.compat.v1.placeholder(tf.float32, [])
+        self.avg_queue = tf.compat.v1.placeholder(tf.float32, [])
+        self.std_queue = tf.compat.v1.placeholder(tf.float32, [])
+        self.safety_index = tf.compat.v1.placeholder(tf.float32, [])
         self.train_summary = tf.compat.v1.summary.scalar('train_reward', self.train_reward,
                                                          'avg_queue', self.avg_queue,
                                                          'std_queue', self.std_queue,
@@ -129,7 +132,7 @@ class Trainer():
     def _add_summary(self, reward,avg_queue,std_queue,safety_index, global_step, is_train=True):
         if is_train:
             summ = self.sess.run(self.train_summary, {self.train_reward: reward},
-                                 {self.avg_queue:avg_queue},
+                                 {self.avg_queue: avg_queue},
                                  {self.std_queue: std_queue},
                                  {self.safety_index : safety_index})
         else:
