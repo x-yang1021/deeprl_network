@@ -119,13 +119,19 @@ class Trainer():
 
     def _init_summary(self):
         self.train_reward = tf.compat.v1.placeholder(tf.float32, [])
-        self.train_summary = tf.compat.v1.summary.scalar('train_reward', self.train_reward)
+        self.train_summary = tf.compat.v1.summary.scalar('train_reward', self.train_reward,
+                                                         'avg_queue', self.avg_queue,
+                                                         'std_queue', self.std_queue,
+                                                         'safety_index', self.safety_index)
         self.test_reward = tf.compat.v1.placeholder(tf.float32, [])
         self.test_summary = tf.compat.v1.summary.scalar('test_reward', self.test_reward)
 
-    def _add_summary(self, reward, global_step, is_train=True):
+    def _add_summary(self, reward,avg_queue,std_queue,safety_index, global_step, is_train=True):
         if is_train:
-            summ = self.sess.run(self.train_summary, {self.train_reward: reward})
+            summ = self.sess.run(self.train_summary, {self.train_reward: reward},
+                                 {self.avg_queue:avg_queue},
+                                 {self.std_queue: std_queue},
+                                 {self.safety_index : safety_index})
         else:
             summ = self.sess.run(self.test_summary, {self.test_reward: reward})
         self.summary_writer.add_summary(summ, global_step=global_step)
@@ -154,14 +160,17 @@ class Trainer():
             value = self.model.forward(ob, done, self.naction, 'v')
         return value
 
-    def _log_episode(self, global_step, mean_reward, std_reward):
+    def _log_episode(self, global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward):
         log = {'agent': self.agent,
                'step': global_step,
                'test_id': -1,
                'avg_reward': mean_reward,
+               'avg_queue' : avg_queue,
+               'std_queue' : std_queue,
+               'safety index':safety_index,
                'std_reward': std_reward}
         self.data.append(log)
-        self._add_summary(mean_reward, global_step)
+        self._add_summary(mean_reward,avg_queue,std_queue,safety_index, global_step)
         self.summary_writer.flush()
 
     def explore(self, prev_ob, prev_done):
@@ -174,12 +183,15 @@ class Trainer():
             value = self._get_value(ob, done, action)
             # transition
             self.env.update_fingerprint(policy)
-            next_ob, reward, done, global_reward = self.env.step(action)
+            next_ob, reward, done, global_reward, avg_queue, std_queue, safety_index = self.env.step(action)
             # if self.cur_step in self.accident_step:
             #         self.env.accident()
             # if self.cur_step in self.accident_step:
             #     self.env.accident()
             self.episode_rewards.append(global_reward)
+            self.episode_avg_queue.append(avg_queue)
+            self.episode_std_queue.append(std_queue)
+            self.episode_safety_index.append(safety_index)
             global_step = self.global_counter.next()
             self.cur_step += 1
             # collect experience
@@ -239,6 +251,9 @@ class Trainer():
             self.model.reset()
             self.cur_step = 0
             self.episode_rewards = []
+            self.episode_avg_queue = []
+            self.episode_std_queue = []
+            self.episode_safety_index = []
             num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=720))
             self.accident_step = np.random.choice(720, num_accident)
             while True:
@@ -252,6 +267,9 @@ class Trainer():
                     break
             rewards = np.array(self.episode_rewards)
             mean_reward = np.mean(rewards)
+            avg_queue = np.mean(np.array(self.episode_avg_queue))
+            std_queue = np.mean(np.array(self.episode_std_queue))
+            safety_index = np.mean(np.array(self.episode_safety_index))
             std_reward = np.std(rewards)
             # NOTE: for CACC we have to run another testing episode after each
             # training episode since the reward and policy settings are different!
@@ -259,7 +277,7 @@ class Trainer():
                 self.env.train_mode = False
                 mean_reward, std_reward = self.perform(-1)
                 self.env.train_mode = True
-            self._log_episode(global_step, mean_reward, std_reward)
+            self._log_episode(global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward)
         df = pd.DataFrame(self.data)
         df.to_csv(self.output_path + 'train_reward.csv')
 

@@ -253,7 +253,6 @@ class NCMultiAgentPolicy(Policy):
         policy_loss = -tf.reduce_sum(tf.reduce_mean(prob_pi * self.ADV, axis=-1))
         value_loss = tf.reduce_sum(tf.reduce_mean(tf.square(self.R - self.v), axis=-1)) * v_coef
         self.loss = policy_loss + value_loss + entropy_loss
-
         wts = tf.compat.v1.trainable_variables(scope=self.name)
         grads = tf.gradients(self.loss, wts)
         if max_grad_norm > 0:

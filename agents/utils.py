@@ -304,7 +304,6 @@ def lstm_comm_hetero(xs, ps, dones, masks, s, n_s_ls, n_a_ls, scope, init_scale=
         out_m = [tf.expand_dims(h[i], axis=0) for i in range(n_agent)]
         out_m = tf.concat(out_m, axis=0) # Nxn_h
         # hidden phase
-
         for i in range(n_agent):
             ci = tf.expand_dims(c[i], axis=0)
             hi = tf.expand_dims(h[i], axis=0)

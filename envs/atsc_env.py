@@ -210,7 +210,7 @@ class TrafficSimulator:
         self._set_phase(action, 'green', rest_interval_sec)
         self._simulate(rest_interval_sec)
         state = self._get_state()
-        reward = self._measure_reward_step()
+        reward, avg_queue, std_queue, safety_index = self._measure_reward_step()
         done = False
         if self.cur_sec >= self.episode_length_sec:
             done = True
@@ -229,7 +229,7 @@ class TrafficSimulator:
             return state, reward, done, global_reward
         if (self.agent == 'greedy') or (self.coop_gamma < 0):
             reward = global_reward
-        return state, reward, done, global_reward
+        return state, reward, done, global_reward, avg_queue, std_queue, safety_index
 
     def accident(self):
 
@@ -560,7 +560,7 @@ class TrafficSimulator:
         #             node_rewards.append(veh_reward[vehID])
         #     node_rewards = np.mean(np.array(node_rewards)) if len(node_rewards) else 0
         #     rewards.append(node_rewards)
-        return np.array(rewards)
+        return np.array(rewards), np.array(reward_avg_queue), np.array(reward_std_queue), np.array(reward_safety_index)
 
     def ttc(self,dis,ego_speed,traffic_speed, veh_metric):
         if traffic_speed <= ego_speed:
