@@ -141,10 +141,13 @@ class Trainer():
                 [self.train_summary, self.reward1, self.reward2, self.reward3],
                 feed_dict=feed_dict
             )
-            self.summary_writer.add_summary(summ, reward1_val, reward2_val, reward3_val, global_step=global_step)
-        else:
-            summ = self.sess.run(self.test_summary, {self.test_reward: reward})
-            self.summary_writer.add_summary(summ, global_step=global_step)
+        self.summary_writer.add_summary(summ, global_step=global_step)
+        self.summary_writer.add_summary(reward1_val, global_step=global_step)
+        self.summary_writer.add_summary(reward2_val, global_step=global_step)
+        self.summary_writer.add_summary(reward3_val, global_step=global_step)
+        # else:
+        #     summ = self.sess.run(self.test_summary, {self.test_reward: reward})
+        #     self.summary_writer.add_summary(summ, global_step=global_step)
 
     def _get_policy(self, ob, done, mode='train'):
         if self.agent.startswith('ma2c'):
