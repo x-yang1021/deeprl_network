@@ -129,15 +129,22 @@ class Trainer():
         self.test_reward = tf.compat.v1.placeholder(tf.float32, [])
         self.test_summary = tf.compat.v1.summary.scalar('test_reward', self.test_reward)
 
-    def _add_summary(self, reward,avg_queue,std_queue,safety_index, global_step, is_train=True):
+    def _add_summary(self,reward,avg_queue,std_queue,safety_index, global_step, is_train=True):
         if is_train:
-            summ = self.sess.run(self.train_summary, {self.train_reward: reward},
-                                 self.reward1, {self.avg_queue: avg_queue},
-                                 self.reward2, {self.std_queue: std_queue},
-                                 self.reward3, {self.safety_index : safety_index})
+            feed_dict = {
+                self.train_reward: reward,
+                self.avg_queue: avg_queue,
+                self.std_queue: std_queue,
+                self.safety_index: safety_index
+            }
+            summ, reward1_val, reward2_val, reward3_val = self.sess.run(
+                [self.train_summary, self.reward1, self.reward2, self.reward3],
+                feed_dict=feed_dict
+            )
+            self.summary_writer.add_summary(summ, reward1_val, reward2_val, reward3_val, global_step=global_step)
         else:
             summ = self.sess.run(self.test_summary, {self.test_reward: reward})
-        self.summary_writer.add_summary(summ, global_step=global_step)
+            self.summary_writer.add_summary(summ, global_step=global_step)
 
     def _get_policy(self, ob, done, mode='train'):
         if self.agent.startswith('ma2c'):
