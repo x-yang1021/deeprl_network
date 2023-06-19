@@ -1,2 +1,2 @@
-model_checkpoint_path: "/Users/yang/Documents/GitHub/deeprl_network/test/data/model/checkpoint-720"
-all_model_checkpoint_paths: "/Users/yang/Documents/GitHub/deeprl_network/test/data/model/checkpoint-720"
+model_checkpoint_path: "/home/xiangmin/Documents/GitHub/deeprl_network/test/data/model/checkpoint-1000080"
+all_model_checkpoint_paths: "/home/xiangmin/Documents/GitHub/deeprl_network/test/data/model/checkpoint-1000080"
