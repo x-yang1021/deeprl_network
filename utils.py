@@ -173,7 +173,7 @@ class Trainer():
             value = self.model.forward(ob, done, self.naction, 'v')
         return value
 
-    def _log_episode(self, global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward):
+    def _log_episode(self, global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward,num_accident):
         log = {'agent': self.agent,
                'step': global_step,
                'test_id': -1,
@@ -181,7 +181,8 @@ class Trainer():
                'avg_queue' : avg_queue,
                'std_queue' : std_queue,
                'safety index':safety_index,
-               'std_reward': std_reward}
+               'std_reward': std_reward,
+               'number of accident': num_accident}
         self.data.append(log)
         self._add_summary(mean_reward,avg_queue,std_queue,safety_index, global_step)
         self.summary_writer.flush()
@@ -199,8 +200,8 @@ class Trainer():
             next_ob, reward, done, global_reward, avg_queue, std_queue, safety_index = self.env.step(action)
             if self.cur_step in self.accident_step:
                     self.env.accident()
-            if self.cur_step in self.accident_step:
-                self.env.accident()
+            # if self.cur_step in self.accident_step:
+            #     self.env.accident()
             self.episode_rewards.append(global_reward)
             self.episode_avg_queue.append(avg_queue)
             self.episode_std_queue.append(std_queue)
@@ -290,7 +291,7 @@ class Trainer():
                 self.env.train_mode = False
                 mean_reward, std_reward = self.perform(-1)
                 self.env.train_mode = True
-            self._log_episode(global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward)
+            self._log_episode(global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward, num_accident)
         df = pd.DataFrame(self.data)
         df.to_csv(self.output_path + 'train_reward.csv')
 
