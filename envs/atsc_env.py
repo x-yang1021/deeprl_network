@@ -232,6 +232,7 @@ class TrafficSimulator:
         return state, reward, done, global_reward, avg_queue, std_queue, safety_index
 
     def accident(self):
+        np.random.seed(10000)
         self.accident_veh = np.random.choice(self.sim.vehicle.getIDList())
         self.accident_vehs.append(self.accident_veh)
         # print(self.accident_vehs)
