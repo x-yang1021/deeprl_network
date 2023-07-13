@@ -257,7 +257,7 @@ class Trainer():
         return mean_reward, std_reward
 
     def run(self):
-        np.random.seed(10000)
+        np.random.seed(10)
         while not self.global_counter.should_stop():
             # np.random.seed(self.env.seed)
             ob = self.env.reset()
