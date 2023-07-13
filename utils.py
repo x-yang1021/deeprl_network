@@ -257,6 +257,7 @@ class Trainer():
         return mean_reward, std_reward
 
     def run(self):
+    	np.random.seed(10000)
         while not self.global_counter.should_stop():
             # np.random.seed(self.env.seed)
             ob = self.env.reset()
@@ -268,8 +269,7 @@ class Trainer():
             self.episode_avg_queue = []
             self.episode_std_queue = []
             self.episode_safety_index = []
-            np.random.seed(10000)
-            num_accident = np.random.choice(stats.poisson.rvs(mu=8, size=720))
+            num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=720))
             self.accident_step = np.random.choice(720, num_accident)
             while True:
                 ob, done, R = self.explore(ob, done)
