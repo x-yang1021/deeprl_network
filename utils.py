@@ -269,7 +269,7 @@ class Trainer():
             self.episode_avg_queue = []
             self.episode_std_queue = []
             self.episode_safety_index = []
-            num_accident = np.random.choice(2,3,4)
+            num_accident = np.random.choice([2,3,4])
             self.accident_step = np.random.choice(720, num_accident)
             while True:
                 ob, done, R = self.explore(ob, done)
