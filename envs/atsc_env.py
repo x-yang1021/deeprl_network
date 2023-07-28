@@ -543,7 +543,8 @@ class TrafficSimulator:
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
                 reward_safety_index.append(float(ttc))
         reward_safety_index = np.array(reward_safety_index)
-        reward_safety_index = np.mean(reward_safety_index)/100
+        safe_veh = (reward_safety_index < 20).sum()
+        reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
         rewards = reward_safety_index + reward_std_queue + reward_avg_queue
         # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
