@@ -480,7 +480,7 @@ class TrafficSimulator:
         veh_width = 1.8
         veh_length = 5
         #hard code upper limit of reward
-        max_length = 200
+        max_length = 1
         min_vel_gap = 0.1
         self.max_reward = max_length/min_vel_gap
         for edge in edges:
@@ -543,9 +543,10 @@ class TrafficSimulator:
                 ttc = min(ttc_front,ttc_right,ttc_rear,ttc_left)
                 reward_safety_index.append(float(ttc))
         reward_safety_index = np.array(reward_safety_index)
-        safe_veh = (reward_safety_index < 20).sum()
-        reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
-        rewards = reward_safety_index + reward_std_queue + reward_avg_queue
+        reward_safety_index = np.mean(reward_safety_index)
+        #safe_veh = (reward_safety_index < 20).sum()
+        #reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
+        rewards = 3* reward_safety_index + reward_std_queue + reward_avg_queue
         # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
