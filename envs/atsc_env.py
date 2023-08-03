@@ -546,7 +546,7 @@ class TrafficSimulator:
         #reward_safety_index = np.mean(reward_safety_index)
         safe_veh = (reward_safety_index < 10).sum()
         reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
-        rewards = 10* reward_safety_index + reward_std_queue + reward_avg_queue
+        rewards = 10.5* reward_safety_index + 3 * reward_std_queue + reward_avg_queue
         # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
