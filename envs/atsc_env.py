@@ -430,8 +430,8 @@ class TrafficSimulator:
 
     def _measure_reward_step(self):
         reward_safety_index = []
-        reward_queue = []
-        scaler = MinMaxScaler()
+        avgreward_queue = []
+        stdreward_queue = []
         for node_name in self.node_names:
             queues = []
             waits = []
@@ -459,18 +459,21 @@ class TrafficSimulator:
                             waits.append(0)
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
-            queue = np.sum(np.array(queues)) if len(queues) else 0
+            avgqueue = np.sum(np.array(queues)) if len(queues) else 0
+            stdqueue = np.std(np.array(queues))
             wait = np.sum(np.array(waits)) if len(waits) else 0
-            if self.obj == 'queue':
-                reward = queue
-            elif self.obj == 'wait':
-                reward = - wait
-            else:
-                reward = - queue - wait
-            reward_queue.append(reward)
-        reward_queue = np.array(reward_queue)
-        reward_avg_queue = - np.mean(reward_queue)
-        reward_std_queue = - np.std(reward_queue)
+            #if self.obj == 'queue':
+            #    reward = queue
+            #elif self.obj == 'wait':
+            #    reward = - wait
+            #else:
+            #    reward = - queue - wait
+            avgreward_queue.append(avgqueue)
+            stdreward_queue.append(stdqueue)
+        reward_avg_queue = np.array(avgreward_queue)
+        reward_avg_queue = - np.mean(reward_avg_queue)
+        reward_std_queue = np.array(stdreward_queue)
+        reward_std_queue = - np.mean(reward_std_queue)
         # risk_inices = np.array(self.get_risk_index())
         # risk_inices = risk_inices.reshape(-1, 1)
         # scaler.fit(risk_inices)
@@ -546,7 +549,7 @@ class TrafficSimulator:
         #reward_safety_index = np.mean(reward_safety_index)
         safe_veh = (reward_safety_index < 10).sum()
         reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
-        rewards = 10.5* reward_safety_index + 3 * reward_std_queue + reward_avg_queue
+        rewards = 8* reward_safety_index + 2 * reward_std_queue + reward_avg_queue
         # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
