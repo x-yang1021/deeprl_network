@@ -197,6 +197,7 @@ class TrafficSimulator:
         self.cur_sec = 0
         self.accident_vehs = []
         self.cur_episode += 1
+        self.pre_queue = np.zeros(len(self.node_names))
         # initialize fingerprint
         self.update_fingerprint(self._init_policy())
         # next environment random condition should be different
@@ -434,6 +435,7 @@ class TrafficSimulator:
         stdreward_queue = []
         for node_name in self.node_names:
             queues = []
+            stdqueue = []
             waits = []
             for ild in self.nodes[node_name].ilds_in:
                 if self.obj in ['queue', 'hybrid']:
@@ -460,7 +462,8 @@ class TrafficSimulator:
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
             avgqueue = np.sum(np.array(queues)) if len(queues) else 0
-            stdqueue = np.std(np.array(queues))
+            stdqueue.append(np.abs(self.pre_queue[self.node_names.index(node_name)] - avgqueue))
+            #stdqueue = np.std(np.array(queues))
             wait = np.sum(np.array(waits)) if len(waits) else 0
             #if self.obj == 'queue':
             #    reward = queue
@@ -469,11 +472,13 @@ class TrafficSimulator:
             #else:
             #    reward = - queue - wait
             avgreward_queue.append(avgqueue)
-            stdreward_queue.append(stdqueue)
+            #stdreward_queue.append(stdqueue)
         reward_avg_queue = np.array(avgreward_queue)
-        reward_avg_queue = - np.mean(reward_avg_queue)
-        reward_std_queue = np.array(stdreward_queue)
-        reward_std_queue = - np.mean(reward_std_queue)
+        reward_avg_queue = np.mean(reward_avg_queue)
+        #reward_std_queue = np.array(stdreward_queue)
+        reward_std_queue = np.array(stdqueue)
+        reward_std_queue = np.mean(reward_std_queue)
+        self.pre_queue = np.array(avgreward_queue)
         # risk_inices = np.array(self.get_risk_index())
         # risk_inices = risk_inices.reshape(-1, 1)
         # scaler.fit(risk_inices)
@@ -549,7 +554,7 @@ class TrafficSimulator:
         #reward_safety_index = np.mean(reward_safety_index)
         safe_veh = (reward_safety_index < 10).sum()
         reward_safety_index = -(safe_veh/reward_safety_index.shape[0]) * 100
-        rewards = 8* reward_safety_index + 2 * reward_std_queue + reward_avg_queue
+        rewards = 10* reward_safety_index - 10* reward_std_queue - reward_avg_queue
         # print("rewards", rewards, "safety index", reward_safety_index, "std_queue", reward_std_queue, "avg_queue", reward_avg_queue)
         # for node_name in self.node_names:
         #     node_rewards = []
