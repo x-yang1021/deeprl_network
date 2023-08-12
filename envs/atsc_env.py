@@ -462,7 +462,7 @@ class TrafficSimulator:
                         else:
                             waits.append(self.sim.vehicle.getWaitingTime(vid))
             avgqueue = np.sum(np.array(queues)) if len(queues) else 0
-            stdqueue.append(np.abs(self.pre_queue[self.node_names.index(node_name)] - avgqueue))
+            stdqueue = np.abs(self.pre_queue[self.node_names.index(node_name)] - avgqueue)
             #stdqueue = np.std(np.array(queues))
             wait = np.sum(np.array(waits)) if len(waits) else 0
             #if self.obj == 'queue':
@@ -472,11 +472,11 @@ class TrafficSimulator:
             #else:
             #    reward = - queue - wait
             avgreward_queue.append(avgqueue)
-            #stdreward_queue.append(stdqueue)
+            stdreward_queue.append(stdqueue)
         reward_avg_queue = np.array(avgreward_queue)
         reward_avg_queue = np.mean(reward_avg_queue)
         #reward_std_queue = np.array(stdreward_queue)
-        reward_std_queue = np.array(stdqueue)
+        reward_std_queue = np.array(stdreward_queue)
         reward_std_queue = np.mean(reward_std_queue)
         self.pre_queue = np.array(avgreward_queue)
         # risk_inices = np.array(self.get_risk_index())
