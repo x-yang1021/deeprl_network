@@ -17,10 +17,10 @@ class IA2C:
     The basic IA2C implementation with decentralized actor and centralized critic,
     limited to neighborhood area only.
     """
-    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
+    def __init__(self, n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
                  total_step, model_config, seed=0):
         self.name = 'ia2c'
-        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, loss_rate, distance_mask, coop_gamma,
+        self._init_algo(n_s_ls, n_a_ls, neighbor_mask, distance_mask, coop_gamma,
                         total_step, seed, model_config)
 
     def add_transition(self, ob, naction, action, reward, value, done):
