@@ -387,7 +387,7 @@ def init_routes(density):
             k += 1
     return output
 
-def output_flows(peak_flow1, peak_flow2, density, seed=10000): #1000 2000 0.2
+def output_flows(peak_flow1, peak_flow2, density, seed=10): #1000 2000 0.2
     '''
     flow1: x11, x12, x13, x14, x15 -> x1, x2, x3, x4, x5
     flow2: x16, x17, x18, x19, x20 -> x6, x7, x8, x9, x10
