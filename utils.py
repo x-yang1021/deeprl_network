@@ -11,7 +11,7 @@ from scipy import stats
 
 
 # import accident data
-data = pd.read_excel('./accident data.xlsx')
+data = pd.read_excel('./envs/real_net_data/accident data.xlsx')
 df = pd.DataFrame(data, columns=['alert_time'])
 accident_time = pd.DataFrame()
 accident_time['date'] = df['alert_time'].dt.date
