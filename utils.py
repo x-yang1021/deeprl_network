@@ -10,6 +10,14 @@ import traci
 from scipy import stats
 
 
+# import accident data
+data = pd.read_excel('./accident data.xlsx')
+df = pd.DataFrame(data, columns=['alert_time'])
+accident_time = pd.DataFrame()
+accident_time['date'] = df['alert_time'].dt.date
+accident_time['hour'] = df['alert_time'].dt.hour
+accident_time['minute'] = df['alert_time'].dt.minute
+
 def check_dir(cur_dir):
     if not os.path.exists(cur_dir):
         return False
@@ -190,6 +198,20 @@ class Trainer():
     def explore(self, prev_ob, prev_done):
         ob = prev_ob
         done = prev_done
+        # select date
+        a = np.random.choice(accident_time['date'].unique())
+        hour = accident_time.loc[accident_time['date'] == a]
+
+        # select hour
+        b = np.random.choice(hour['hour'].unique())
+        minute = hour.loc[hour['hour'] == b]
+
+        self.accident_step = []
+        c = minute['minute'].tolist()
+        for step in c:
+            # covert to seconds
+            self.accident_step.append(step * 12)
+
         for step in range(self.n_step):
             # pre-decision
             policy, action = self._get_policy(ob, done)
@@ -269,8 +291,6 @@ class Trainer():
             self.episode_avg_queue = []
             self.episode_std_queue = []
             self.episode_safety_index = []
-            num_accident = np.random.choice([2,3,4])
-            self.accident_step = np.random.choice(720, num_accident)
             while True:
                 ob, done, R = self.explore(ob, done)
                 dt = self.env.T - self.cur_step

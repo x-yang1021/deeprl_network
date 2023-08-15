@@ -111,8 +111,8 @@ def output_config(thread=None):
     else:
         out_file = 'most_%d.rou.xml' % int(thread)
     str_config = '<configuration>\n  <input>\n'
-    str_config += '    <net-file value="in/most.net.xml"/>\n'
-    str_config += '    <route-files value="in/%s"/>\n' % out_file
+    str_config += '    <net-file value="xiaoshan/xiaoshan.net.xml"/>\n'
+    str_config += '    <route-files value="xiaoshan/xiaoshan3.trips.xml"/>\n'
     # str_config += '    <additional-files value="in/most.add.xml"/>\n'
     str_config += '  </input>\n  <time>\n'
     str_config += '    <begin value="0"/>\n    <end value="3600"/>\n'
@@ -120,13 +120,13 @@ def output_config(thread=None):
     return str_config
 
 
-def gen_rou_file(path, flow_rate, seed=None, thread=None):
-    if thread is None:
-        flow_file = 'most.rou.xml'
-    else:
-        flow_file = 'most_%d.rou.xml' % int(thread)
-    write_file(path + 'in/' + flow_file, output_flows(flow_rate, seed=seed))
-    sumocfg_file = path + ('most_%d.sumocfg' % thread)
+def gen_rou_file(path, thread=None):
+    # if thread is None:
+    #     flow_file = 'map1.trips.xml'
+    # else:
+    #     flow_file = 'map1_%d.trips.xml' % int(thread)
+    # write_file(path + 'xiaoshan/' + flow_file)
+    sumocfg_file = path + ('xiaoshan_%d.sumocfg' % thread)
     write_file(sumocfg_file, output_config(thread=thread))
     return sumocfg_file
 
