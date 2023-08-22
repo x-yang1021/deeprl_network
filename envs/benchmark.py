@@ -11,6 +11,15 @@ Overall_reward = []
 safety = []
 avg = []
 std = []
+
+def ttc_function(dis, ego_speed, traffic_speed, veh_metric):
+    if traffic_speed <= ego_speed:
+        ttc_index = max_reward
+    else:
+        ttc_index = (dis - veh_metric) / (traffic_speed - ego_speed)
+    ttc_index = np.clip(ttc_index, 0, max_reward)
+    return ttc_index
+
 while episode < 1389:
     teleport_range= np.linspace(900,1500,7)
     teleport_time = np.random.choice(teleport_range)
@@ -32,16 +41,17 @@ while episode < 1389:
     nodes = {}
     for node_name in node_names:
         nodes[node_name] = traci.trafficlight.getControlledLanes(node_name)
+    num_accident = np.random.choice([2, 3, 4])
+    accident_step = np.random.choice(720, num_accident)
+    # print('accident step', accident_step, 'accident time', teleport_time)
 
     while step < 3601:
         traci.simulationStep()
-        num_accident = np.random.choice([2, 3, 4])
-        accident_step = np.random.choice(720, num_accident)
         episode_reward = []
         episode_safety = []
         episode_avg = []
         episode_std = []
-        if step/5 == accident_step:
+        if step/5 in accident_step:
             accident_veh = np.random.choice(traci.vehicle.getIDList())
             accident_vehs.append(accident_veh)
             traci.vehicle.setSpeed(vehID= accident_veh, speed=0)
@@ -72,7 +82,7 @@ while episode < 1389:
             reward_std_queue = np.array(stdreward_queue)
             reward_std_queue = np.mean(reward_std_queue)
             pre_queue = np.array(avgreward_queue)
-            # risk_inices = np.array(self.get_risk_index())
+            # risk_inices = np.array get_risk_index())
             # risk_inices = risk_inices.reshape(-1, 1)
             # scaler.fit(risk_inices)
             edges = traci.edge.getIDList()
@@ -83,7 +93,7 @@ while episode < 1389:
             # hard code upper limit of reward
             max_length = 200
             min_vel_gap = 0.1
-            self.max_reward = max_length / min_vel_gap
+            max_reward = max_length / min_vel_gap
             for edge in edges:
                 edge_veh[edge] = traci.edge.getLastStepVehicleIDs(edge)
             for key in edge_veh:
@@ -129,19 +139,19 @@ while episode < 1389:
                                 right = traffic
                                 right_dis = lat_dis
                     ego_speed = traci.vehicle.getSpeed(ego)
-                    ttc_front = ttc_rear = ttc_left = ttc_right = self.max_reward
+                    ttc_front = ttc_rear = ttc_left = ttc_right = max_reward
                     if front:
                         front_speed = traci.vehicle.getSpeed(front)
-                        ttc_front = self.ttc(front_dis, front_speed, ego_speed, veh_length)
+                        ttc_front = ttc_function(front_dis, front_speed, ego_speed, veh_length)
                     if rear:
                         rear_speed = traci.vehicle.getSpeed(rear)
-                        ttc_rear = self.ttc(-rear_dis, ego_speed, rear_speed, veh_length)
+                        ttc_rear = ttc_function(-rear_dis, ego_speed, rear_speed, veh_length)
                     if left:
                         left_speed = traci.vehicle.getSpeed(left)
-                        ttc_left = self.ttc(left_dis, left_speed, ego_speed, veh_width)
+                        ttc_left = ttc_function(left_dis, left_speed, ego_speed, veh_width)
                     if right:
                         right_speed = traci.vehicle.getSpeed(right)
-                        ttc_right = self.ttc(-right_dis, ego_speed, right_speed, veh_width)
+                        ttc_right = ttc_function(-right_dis, ego_speed, right_speed, veh_width)
                     ttc = min(ttc_front, ttc_right, ttc_rear, ttc_left)
                     reward_safety_index.append(float(ttc))
             reward_safety_index = np.array(reward_safety_index)
@@ -162,14 +172,8 @@ while episode < 1389:
     episode +=1
 
 d = {'rewards':Overall_reward, 'safety index': safety, 'average queue': avg, "std queue":std }
-df = pd.DataFrame(data = f)
+df = pd.DataFrame(data = d)
 print(df)
+df.to_excel('benchmark.xlsx')
 
 
-def ttc(dis, ego_speed, traffic_speed, veh_metric):
-    if traffic_speed <= ego_speed:
-        ttc_index = max_reward
-    else:
-        ttc_index = (dis - veh_metric) / (traffic_speed - ego_speed)
-    ttc_index = np.clip(ttc_index, 0, max_reward)
-    return ttc_index
