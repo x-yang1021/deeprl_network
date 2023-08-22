@@ -5,6 +5,7 @@ import time
 import traci
 import vectormath as vmath
 import pandas as pd
+from scipy import stats
 
 episode = 0
 Overall_reward = []
@@ -41,7 +42,7 @@ while episode < 1389:
     nodes = {}
     for node_name in node_names:
         nodes[node_name] = traci.trafficlight.getControlledLanes(node_name)
-    num_accident = np.random.choice([2, 3, 4])
+    num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=720))
     accident_step = np.random.choice(720, num_accident)
     # print('accident step', accident_step, 'accident time', teleport_time)
 
