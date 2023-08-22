@@ -181,7 +181,7 @@ class Trainer():
             value = self.model.forward(ob, done, self.naction, 'v')
         return value
 
-    def _log_episode(self, global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward,num_accident):
+    def _log_episode(self, global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward):
         log = {'agent': self.agent,
                'step': global_step,
                'test_id': -1,
@@ -189,8 +189,7 @@ class Trainer():
                'avg_queue' : avg_queue,
                'std_queue' : std_queue,
                'safety index':safety_index,
-               'std_reward': std_reward,
-               'number of accident': num_accident}
+               'std_reward': std_reward}
         self.data.append(log)
         self._add_summary(mean_reward,avg_queue,std_queue,safety_index, global_step)
         self.summary_writer.flush()
@@ -312,7 +311,7 @@ class Trainer():
                 self.env.train_mode = False
                 mean_reward, std_reward = self.perform(-1)
                 self.env.train_mode = True
-            self._log_episode(global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward, num_accident)
+            self._log_episode(global_step, mean_reward,avg_queue,std_queue,safety_index, std_reward)
         df = pd.DataFrame(self.data)
         df.to_csv(self.output_path + 'train_reward.csv')
 

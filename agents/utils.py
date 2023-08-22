@@ -858,6 +858,7 @@ class OnPolicyBuffer(TransBuffer):
     def _add_s_R_Adv(self, R):
         Rs = []
         Advs = []
+        print('rs', self.rs)
         # use post-step dones here
         for r, v, done in zip(self.rs[::-1], self.vs[::-1], self.dones[:0:-1]):
             R = self.gamma * R * (1.-done)
