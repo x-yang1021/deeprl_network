@@ -25,9 +25,10 @@ while episode < 1389:
     teleport_range= np.linspace(900,1500,7)
     teleport_time = np.random.choice(teleport_range)
     sumocfg_file = '/Users/yang/Documents/GitHub/deeprl_network/envs/large_grid_data/exp_0.sumocfg'
-    app = 'sumo-gui'
+    app = 'sumo'
     command = [checkBinary(app), '-c', sumocfg_file]
     command += ['--seed', '10']
+    command += ['--remote-port', '8813']
     command += ['--no-step-log', 'True']
     command += ['--time-to-teleport', '%d'%teleport_time] # select the time for accident to be solved
     command += ['--no-warnings', 'True']
