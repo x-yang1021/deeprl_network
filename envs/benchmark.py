@@ -21,14 +21,13 @@ def ttc_function(dis, ego_speed, traffic_speed, veh_metric):
     ttc_index = np.clip(ttc_index, 0, max_reward)
     return ttc_index
 
-while episode < 1389:
+while episode < 31:
     teleport_range= np.linspace(900,1500,7)
     teleport_time = np.random.choice(teleport_range)
-    sumocfg_file = '/Users/yang/Documents/GitHub/deeprl_network/envs/large_grid_data/exp_0.sumocfg'
+    sumocfg_file = './envs/large_grid_data/exp_0.sumocfg'
     app = 'sumo'
     command = [checkBinary(app), '-c', sumocfg_file]
     command += ['--seed', '10']
-    command += ['--remote-port', '8813']
     command += ['--no-step-log', 'True']
     command += ['--time-to-teleport', '%d'%teleport_time] # select the time for accident to be solved
     command += ['--no-warnings', 'True']
@@ -168,6 +167,7 @@ while episode < 1389:
         step +=1
     traci.close()
     Overall_reward.append(np.mean(episode_reward))
+    print('episode %d'%episode, 'episode reward', np.mean(episode_reward))
     safety.append(np.mean(episode_safety))
     avg.append(np.mean(episode_avg))
     std.append(np.mean(episode_std))
