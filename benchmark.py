@@ -34,7 +34,7 @@ while episode < 31:
     command += ['--duration-log.disable', 'True']
     # wait 1s to establish the traci server
     time.sleep(1)
-    traci.start(command)
+    traci.start(command,port=8873)
     step = 0
     node_names = traci.trafficlight.getIDList()
     pre_queue = np.zeros(len(node_names))
@@ -42,9 +42,9 @@ while episode < 31:
     nodes = {}
     for node_name in node_names:
         nodes[node_name] = traci.trafficlight.getControlledLanes(node_name)
-    num_accident = np.random.choice(stats.poisson.rvs(mu=4, size=720))
+    num_accident = np.random.choice(stats.poisson.rvs(mu=8, size=720))
     accident_step = np.random.choice(720, num_accident)
-    # print('accident step', accident_step, 'accident time', teleport_time)
+    print('accident step', accident_step, 'accident time', teleport_time)
 
     while step < 3601:
         traci.simulationStep()
@@ -175,7 +175,6 @@ while episode < 31:
 
 d = {'rewards':Overall_reward, 'safety index': safety, 'average queue': avg, "std queue":std }
 df = pd.DataFrame(data = d)
-print(df)
-df.to_excel('benchmark.xlsx')
+df.to_excel('benchmark 8.xlsx')
 
 
